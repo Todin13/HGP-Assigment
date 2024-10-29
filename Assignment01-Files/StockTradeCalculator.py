@@ -568,7 +568,7 @@ class StockTradeProfitCalculator(QDialog):
         self.info_text = (
             f"Calendar's Legend:<br>"
             f"• <span style='color: {stock_data_color};'>■</span> Indicates dates with stock data.<br>"
-            f"• <span style='color: {no_data_color};'>■</span> Indicates dates without stock data."
+            f"• <span style='color: {no_data_color};'>■</span> Indicates dates without stock data.<br>"
             "Graph's Legend:<br>"
             f"• <span  style='color: {stock_data_color};'>---</span> Indicates the stock values in $.<br>"
             f"• Markets day indicates the days where we have the values of the stocks<br>"
