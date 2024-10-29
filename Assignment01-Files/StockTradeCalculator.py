@@ -86,30 +86,44 @@ class StockTradeProfitCalculator(QDialog):
         self.quantitySpinBox.setValue(1)  # Default value
 
         # TODO: create QLabels to show the Stock purchase total
-        self.purchaseTotalLabel = QLabel("Purchase Total: $0.00", self)
-        self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
-        self.profitTotalLabel = QLabel("Profit: $0.00", self)
+        self.InitQlabels()
 
-        #Creation of legend for calendar color
-        self.legendLabel = QLabel("• Dates with data are highlighted in gold", self)
-        self.legendLabel.setStyleSheet("color: #FFD700; font-weight: bold;")
+        # Create a QLabel for the information icon
+        self.infoIconLabel = QLabel("i")  # Use "i" or any icon representation you prefer
+        self.infoIconLabel.setStyleSheet("font-size: 14px;")  # Make "i" smaller
+        self.infoIconLabel.setAlignment(Qt.AlignmentFlag.AlignRight)  # Align to the right
+
+        # HTML for tooltip with color cubes
+        self.infoIconLabel.setToolTip(
+            "Calendar's Legend:<br>"
+            "• <span style='color: purple;'>■</span> Indicates dates with stock data.<br>"
+            "• <span style='color: gray;'>■</span> Indicates dates without stock data."
+        )
 
         # TODO: create QLabels to show the Stock sell total
         # TODO: create QLabels to show the Stock profit total
         # TODO: initialize the layout - 6 rows to start
+
+        # Create layout
         layout = QGridLayout()
-        layout.addWidget(self.stockLabel, 0, 0)
-        layout.addWidget(self.stockComboBox, 0, 1)
-        layout.addWidget(self.legendLabel, 7, 0, 1, 2)
-        layout.addWidget(QLabel("Purchase Date:"), 1, 0)
-        layout.addWidget(self.buyCalendar, 1, 1)
-        layout.addWidget(QLabel("Sell Date:"), 2, 0)
-        layout.addWidget(self.sellCalendar, 2, 1)
-        layout.addWidget(QLabel("Quantity:"), 3, 0)
-        layout.addWidget(self.quantitySpinBox, 3, 1)
-        layout.addWidget(self.purchaseTotalLabel, 4, 0, 1, 2)
-        layout.addWidget(self.sellTotalLabel, 5, 0, 1, 2)
-        layout.addWidget(self.profitTotalLabel, 6, 0, 1, 2)
+
+        # Info icon 
+        layout.addWidget(self.infoIconLabel, 0, 2)  
+
+        layout.addWidget(self.stockLabel, 1, 0)
+        layout.addWidget(self.stockComboBox, 1, 1)
+
+        # Add the sell and buy calendar
+        layout.addWidget(QLabel("Purchase Date:"), 2, 0)
+        layout.addWidget(self.buyCalendar, 2, 1)  # Buy calendar below
+        layout.addWidget(QLabel("Sell Date:"), 3, 0)
+        layout.addWidget(self.sellCalendar, 3, 1)  # Sell calendar below
+
+        layout.addWidget(QLabel("Quantity:"), 4, 0)
+        layout.addWidget(self.quantitySpinBox, 4, 1)
+        layout.addWidget(self.purchaseTotalLabel, 5, 0, 1, 2)
+        layout.addWidget(self.sellTotalLabel, 6, 0, 1, 2)
+        layout.addWidget(self.profitTotalLabel, 7, 0, 1, 2)
 
         self.setLayout(layout)
 
@@ -153,9 +167,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
-                self.sellTotalLabel.setText(f"Sell Total: 0")
-                self.profitTotalLabel.setText(f"Profit: 0")
+                self.InitQlabels()
                 return
 
             # TODO: perform necessary calculations to calculate totals
@@ -170,9 +182,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
-                self.sellTotalLabel.setText(f"Sell Total: 0")
-                self.profitTotalLabel.setText(f"Profit: 0")
+                self.InitQlabels()
                 return
 
             # Check if the selected dates are in the data for this stock
@@ -185,9 +195,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
-                self.sellTotalLabel.setText(f"Sell Total: 0")
-                self.profitTotalLabel.setText(f"Profit: 0")
+                self.InitQlabels()
                 return
             if sell_price is None:
                 error_dialog = ErrorWindow(
@@ -195,9 +203,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
-                self.sellTotalLabel.setText(f"Sell Total: 0")
-                self.profitTotalLabel.setText(f"Profit: 0")
+                self.InitQlabels()
                 return
 
             # Calculate totals
@@ -266,6 +272,11 @@ class StockTradeProfitCalculator(QDialog):
         except ValueError:
             print(f"Error parsing date: {date_string}")
             return None
+        
+    def InitQlabels(self):
+        self.purchaseTotalLabel = QLabel("Purchase Total: $0.00", self)
+        self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
+        self.profitTotalLabel = QLabel("Profit: $0.00", self)
 
     def highlightAvailableDates(self):
         """
@@ -281,11 +292,13 @@ class StockTradeProfitCalculator(QDialog):
         if selected_stock not in self.data:
             return
 
-        # Define formats
+        # Get the application's selection color and make it darker
+        selection_color = self.palette().color(self.palette().ColorRole.Highlight)
+        darker_selection_color = selection_color.darker(150)  # Adjust darkness level
+
+        # Define formats using the darker selection color
         available_format = QTextCharFormat()
-        available_format.setBackground(
-            QColor("#FFD700")
-        )  # Gold color for available dates
+        available_format.setBackground(darker_selection_color)  # Darker selection color for available dates
 
         unavailable_format = QTextCharFormat()
         unavailable_format.setForeground(
