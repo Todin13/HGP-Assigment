@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QSpinBox,
     QVBoxLayout,
+    QFrame,
+    QHBoxLayout,
 )
 
 
@@ -88,9 +90,14 @@ class StockTradeProfitCalculator(QDialog):
         # TODO: create QLabels to show the Stock purchase total
         self.InitQlabels()
 
+        #  Create a QFrame to hold the info icon label with a box around it
+        self.infoFrame = QFrame()
+        self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel) 
+        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")
+
         # Create a QLabel for the information icon
-        self.infoIconLabel = QLabel("i")  # Use "i" or any icon representation you prefer
-        self.infoIconLabel.setStyleSheet("font-size: 14px;")  # Make "i" smaller
+        self.infoIconLabel = QLabel("info")
+        self.infoIconLabel.setStyleSheet("font-size: 15px;")  
         self.infoIconLabel.setAlignment(Qt.AlignmentFlag.AlignRight)  # Align to the right
 
         # HTML for tooltip with color cubes
@@ -100,32 +107,49 @@ class StockTradeProfitCalculator(QDialog):
             "• <span style='color: gray;'>■</span> Indicates dates without stock data."
         )
 
+        # Add the info icon label to the frame
+        frameLayout = QHBoxLayout(self.infoFrame)
+        frameLayout.addWidget(self.infoIconLabel)  # Align the icon to the right
+        frameLayout.setContentsMargins(5, 0, 5, 0)  
+        frameLayout.setSpacing(5)
+
+        mainLayout = QVBoxLayout()
+
+        # Set the content margin of the main layout
+        mainLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Add the frame to the main layout
+        mainLayout.addWidget(self.infoFrame)
+
         # TODO: create QLabels to show the Stock sell total
         # TODO: create QLabels to show the Stock profit total
         # TODO: initialize the layout - 6 rows to start
 
-        # Create layout
-        layout = QGridLayout()
+        # Create the body layout
+        bodyLayout = QGridLayout()
 
-        # Info icon 
-        layout.addWidget(self.infoIconLabel, 0, 2)  
+        # Set the content margin of the body layout
+        bodyLayout.setContentsMargins(10, 10, 10, 10)
 
-        layout.addWidget(self.stockLabel, 1, 0)
-        layout.addWidget(self.stockComboBox, 1, 1)
+        # Adding the stock choosing box
+        bodyLayout.addWidget(self.stockLabel, 1, 0)
+        bodyLayout.addWidget(self.stockComboBox, 1, 1)
 
         # Add the sell and buy calendar
-        layout.addWidget(QLabel("Purchase Date:"), 2, 0)
-        layout.addWidget(self.buyCalendar, 2, 1)  # Buy calendar below
-        layout.addWidget(QLabel("Sell Date:"), 3, 0)
-        layout.addWidget(self.sellCalendar, 3, 1)  # Sell calendar below
+        bodyLayout.addWidget(QLabel("Purchase Date:"), 2, 0)
+        bodyLayout.addWidget(self.buyCalendar, 2, 1)  # Buy calendar below
+        bodyLayout.addWidget(QLabel("Sell Date:"), 3, 0)
+        bodyLayout.addWidget(self.sellCalendar, 3, 1)  # Sell calendar below
 
-        layout.addWidget(QLabel("Quantity:"), 4, 0)
-        layout.addWidget(self.quantitySpinBox, 4, 1)
-        layout.addWidget(self.purchaseTotalLabel, 5, 0, 1, 2)
-        layout.addWidget(self.sellTotalLabel, 6, 0, 1, 2)
-        layout.addWidget(self.profitTotalLabel, 7, 0, 1, 2)
+        bodyLayout.addWidget(QLabel("Quantity:"), 4, 0)
+        bodyLayout.addWidget(self.quantitySpinBox, 4, 1)
+        bodyLayout.addWidget(self.purchaseTotalLabel, 5, 0, 1, 2)
+        bodyLayout.addWidget(self.sellTotalLabel, 6, 0, 1, 2)
+        bodyLayout.addWidget(self.profitTotalLabel, 7, 0, 1, 2)
 
-        self.setLayout(layout)
+        mainLayout.addLayout(bodyLayout)
+
+        self.setLayout(mainLayout)
 
         # TODO: set the calendar values
         # purchase: two weeks before most recent
