@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 
 from PyQt6.QtCore import QDate, Qt
-from PyQt6.QtGui import QColor, QTextCharFormat
+from PyQt6.QtGui import QColor, QTextCharFormat, QPalette
 from PyQt6.QtWidgets import (
     QApplication,
     QCalendarWidget,
@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QVBoxLayout,
     QFrame,
+    QMenu,
     QHBoxLayout,
 )
 
@@ -88,32 +89,37 @@ class StockTradeProfitCalculator(QDialog):
         self.quantitySpinBox.setValue(1)  # Default value
 
         # TODO: create QLabels to show the Stock purchase total
-        self.InitQlabels()
+        self.purchaseTotalLabel = QLabel("Purchase Total: $0.00", self)
+        self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
+        self.profitTotalLabel = QLabel("Profit: $0.00", self)
+
+        # Theme changer
+        self.themeChanger = QPushButton("Themes", self)
+        self.themeChanger.setMenu(self.change_theme())
 
         #  Create a QFrame to hold the info icon label with a box around it
         self.infoFrame = QFrame()
         self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")
+        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")  # Init of the color
 
         # Create a QLabel for the information icon
         self.infoIconLabel = QLabel("info")
         self.infoIconLabel.setStyleSheet("font-size: 15px;")
-        self.infoIconLabel.setAlignment(
-            Qt.AlignmentFlag.AlignRight
-        )  # Align to the right
+        self.infoIconLabel.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        # HTML for tooltip with color cubes
+        # HTML for tooltip with color cubes with init of the color
         self.infoIconLabel.setToolTip(
             "Calendar's Legend:<br>"
-            "• <span style='color: purple;'>■</span> Indicates dates with stock data.<br>"
-            "• <span style='color: gray;'>■</span> Indicates dates without stock data."
+            f"• <span style='color: {'blue'};'>■</span> Indicates dates with stock data.<br>"
+            f"• <span style='color: {'#A9A9A9'};'>■</span> Indicates dates without stock data."
         )
 
         # Add the info icon label to the frame
-        frameLayout = QHBoxLayout(self.infoFrame)
-        frameLayout.addWidget(self.infoIconLabel)  # Align the icon to the right
-        frameLayout.setContentsMargins(5, 0, 5, 0)
-        frameLayout.setSpacing(5)
+        topLayout = QHBoxLayout(self.infoFrame)
+        topLayout.addWidget(self.infoIconLabel)
+        topLayout.addWidget(self.themeChanger)
+        topLayout.setContentsMargins(5, 0, 5, 0)
+        topLayout.setSpacing(5)
 
         mainLayout = QVBoxLayout()
 
@@ -153,8 +159,11 @@ class StockTradeProfitCalculator(QDialog):
 
         self.setLayout(mainLayout)
 
+        # apply default theme
+        self.apply_theme("System")
+
         # TODO: set the calendar values
-        # purchase: two weeks before most recent
+        # purchase: most recent
         self.buyCalendar.setSelectedDate(self.buyCalendarDefaultDate)
         # sell: most recent
         self.sellCalendar.setSelectedDate(self.sellCalendarDefaultDate)
@@ -193,7 +202,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.InitQlabels()
+                self.ResetCalculusLabels()
                 return
 
             # TODO: perform necessary calculations to calculate totals
@@ -208,7 +217,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.InitQlabels()
+                self.ResetCalculusLabels()
                 return
 
             # Check if the selected dates are in the data for this stock
@@ -221,7 +230,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.InitQlabels()
+                self.ResetCalculusLabels()
                 return
             if sell_price is None:
                 error_dialog = ErrorWindow(
@@ -229,7 +238,7 @@ class StockTradeProfitCalculator(QDialog):
                 )
                 error_dialog.exec()
                 # Reset the labels
-                self.InitQlabels()
+                self.ResetCalculusLabels()
                 return
 
             # Calculate totals
@@ -299,10 +308,10 @@ class StockTradeProfitCalculator(QDialog):
             print(f"Error parsing date: {date_string}")
             return None
 
-    def InitQlabels(self):
-        self.purchaseTotalLabel = QLabel("Purchase Total: $0.00", self)
-        self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
-        self.profitTotalLabel = QLabel("Profit: $0.00", self)
+    def ResetCalculusLabels(self):
+        self.purchaseTotalLabel.setText("Purchase Total: $0.00")
+        self.sellTotalLabel.setText("Sell Total: $0.00")
+        self.profitTotalLabel.setText("Profit: $0.00")
 
     def highlightAvailableDates(self):
         """
@@ -369,6 +378,104 @@ class StockTradeProfitCalculator(QDialog):
         while current_date <= end_date:
             yield current_date
             current_date = current_date.addDays(1)
+
+    def change_theme(self):
+        menu = QMenu(self)
+
+        # Create actions for each theme with proper connections
+        action_system = menu.addAction("System")
+        action_system.triggered.connect(lambda: self.apply_theme("System"))
+
+        action_light = menu.addAction("Light")
+        action_light.triggered.connect(lambda: self.apply_theme("Light"))
+
+        action_dark = menu.addAction("Dark")
+        action_dark.triggered.connect(lambda: self.apply_theme("Dark"))
+
+        action_dark_blue = menu.addAction("Dark Blue")
+        action_dark_blue.triggered.connect(lambda: self.apply_theme("Dark Blue"))
+
+        return menu
+
+    def apply_theme(self, theme):
+        palette = QPalette()
+
+        # Define colors for themes
+        if theme == "System":
+            # Reset to system's default palette
+            palette = QApplication.palette()
+        elif theme == "Light":
+            palette.setColor(QPalette.ColorRole.Window, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.WindowText, QColor("#000000"))
+            palette.setColor(QPalette.ColorRole.Base, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#F0F0F0"))
+            palette.setColor(QPalette.ColorRole.ToolTipBase, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.ToolTipText, QColor("#000000"))
+            palette.setColor(QPalette.ColorRole.Text, QColor("#000000"))
+            palette.setColor(QPalette.ColorRole.Button, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.ButtonText, QColor("#000000"))
+            palette.setColor(QPalette.ColorRole.Highlight, QColor("#3399FF"))
+            palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#FFFFFF"))
+        elif theme == "Dark":
+            palette.setColor(QPalette.ColorRole.Window, QColor("#2E2E2E"))
+            palette.setColor(QPalette.ColorRole.WindowText, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.Base, QColor("#3E3E3E"))
+            palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#2E2E2E"))
+            palette.setColor(QPalette.ColorRole.ToolTipBase, QColor("#2E2E2E"))
+            palette.setColor(QPalette.ColorRole.ToolTipText, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.Text, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.Button, QColor("#3E3E3E"))
+            palette.setColor(QPalette.ColorRole.ButtonText, QColor("#FFFFFF"))
+            palette.setColor(QPalette.ColorRole.Highlight, QColor("#505050"))
+            palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#FFFFFF"))
+        elif theme == "Dark Blue":
+            palette.setColor(QPalette.ColorRole.Window, QColor("#282A36"))
+            palette.setColor(QPalette.ColorRole.WindowText, QColor("#F8F8F2"))
+            palette.setColor(QPalette.ColorRole.Base, QColor("#44475A"))
+            palette.setColor(QPalette.ColorRole.AlternateBase, QColor("#282A36"))
+            palette.setColor(QPalette.ColorRole.ToolTipBase, QColor("#282A36"))
+            palette.setColor(QPalette.ColorRole.ToolTipText, QColor("#F8F8F2"))
+            palette.setColor(QPalette.ColorRole.Text, QColor("#F8F8F2"))
+            palette.setColor(QPalette.ColorRole.Button, QColor("#44475A"))
+            palette.setColor(QPalette.ColorRole.ButtonText, QColor("#F8F8F2"))
+            palette.setColor(QPalette.ColorRole.Highlight, QColor("#6272A4"))
+            palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#F8F8F2"))
+        else:
+            error_dialog = ErrorWindow(
+                f"Themes {theme} does not exist going back to system theme."
+            )
+            error_dialog.exec()
+            palette = QApplication.palette()
+
+        # Apply the palette to the main window
+        self.setPalette(palette)
+
+        # Update the color type
+        selection_color = self.palette().color(self.palette().ColorRole.Highlight)
+        stock_data_color = selection_color.darker(150).name()
+        no_data_color = "#A9A9A9"
+        info_frame_color = selection_color.name()
+
+
+        # Updating the menu_style
+        menu_style = f"""
+                    QMenu {{ background-color: {info_frame_color}; color: {no_data_color}; }}
+                    QMenu::item {{ background-color: transparent; }}
+                    QMenu::item:selected {{ background-color: {stock_data_color}; color: {no_data_color}; }}
+                """
+
+        # Update the menu style using setStyleSheet
+        self.themeChanger.setStyleSheet(menu_style)
+
+        # Update the tooltip with color cubes based on the selected theme
+        self.infoIconLabel.setToolTip(
+            f"Calendar's Legend:<br>"
+            f"• <span style='color: {stock_data_color};'>■</span> Indicates dates with stock data.<br>"
+            f"• <span style='color: {no_data_color};'>■</span> Indicates dates without stock data."
+        )
+
+        # Update the info frame background color
+        self.infoFrame.setStyleSheet(f"background-color: {info_frame_color};")
 
 
 # Creating a class called ErrorWindow to show the problem to the user in case of a problem
