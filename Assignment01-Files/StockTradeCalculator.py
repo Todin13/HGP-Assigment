@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QFrame,
     QMenu,
     QHBoxLayout,
+    QMessageBox,
 )
 
 
@@ -60,8 +61,9 @@ class StockTradeProfitCalculator(QDialog):
             )  # Default to the current date
             # Adding error message to tell the user if there is no stock available
             if not self.data.keys():
-                error_dialog = ErrorWindow("No stock available, data error")
-                error_dialog.exec()
+                QMessageBox.critical(
+                    self, "Error", "No stock available, data error"
+                )
 
         # TODO: Define buyCalendarDefaultDate
         self.buyCalendarDefaultDate = (
@@ -85,7 +87,7 @@ class StockTradeProfitCalculator(QDialog):
 
         # TODO: create QSpinBox to select Stock quantity purchased
         self.quantitySpinBox = QSpinBox(self)
-        self.quantitySpinBox.setRange(1, 1000)  # Set a reasonable range for quantity
+        self.quantitySpinBox.setRange(1, 100000)
         self.quantitySpinBox.setValue(1)  # Default value
 
         # TODO: create QLabels to show the Stock purchase total
@@ -93,33 +95,38 @@ class StockTradeProfitCalculator(QDialog):
         self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
         self.profitTotalLabel = QLabel("Profit: $0.00", self)
 
+        #  Create a QFrame to hold the top bar
+        self.infoFrame = QFrame()
+        self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")  # Init of the color to grey because not to strong for the eyes and can be good both in light and dark mode
+
         # Theme changer
         self.themeChanger = QPushButton("Themes", self)
         self.themeChanger.setMenu(self.change_theme())
-
-        #  Create a QFrame to hold the info icon label with a box around it
-        self.infoFrame = QFrame()
-        self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")  # Init of the color
+        self.themeChanger.setFixedSize(90, 20)
+        self.themeChanger.setStyleSheet("font-size: 15px; padding: 0px; margin: 0px;")
 
         # Create a QLabel for the information icon
-        self.infoIconLabel = QLabel("info")
-        self.infoIconLabel.setStyleSheet("font-size: 15px;")
-        self.infoIconLabel.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.infoIconLabel = QPushButton("info", self)
+        self.infoIconLabel.setFixedSize(90, 20)
+        self.infoIconLabel.setStyleSheet("font-size: 15px; padding: 0px; margin: 0px;")
 
-        # HTML for tooltip with color cubes with init of the color
-        self.infoIconLabel.setToolTip(
+        # Init/Default info text shown on click on infoInconLabel 
+        self.info_text = (
             "Calendar's Legend:<br>"
             f"• <span style='color: {'blue'};'>■</span> Indicates dates with stock data.<br>"
             f"• <span style='color: {'#A9A9A9'};'>■</span> Indicates dates without stock data."
         )
 
+        # Connect the info button's clicked signal to a method
+        self.infoIconLabel.clicked.connect(self.show_info)
+
         # Add the info icon label to the frame
         topLayout = QHBoxLayout(self.infoFrame)
-        topLayout.addWidget(self.infoIconLabel)
         topLayout.addWidget(self.themeChanger)
-        topLayout.setContentsMargins(5, 0, 5, 0)
-        topLayout.setSpacing(5)
+        topLayout.addWidget(self.infoIconLabel, alignment=Qt.AlignmentFlag.AlignLeft)
+        topLayout.setContentsMargins(0, 0, 0, 0)
+        topLayout.setSpacing(0)
 
         mainLayout = QVBoxLayout()
 
@@ -159,7 +166,7 @@ class StockTradeProfitCalculator(QDialog):
 
         self.setLayout(mainLayout)
 
-        # apply default theme
+        # apply default theme (system theme)
         self.apply_theme("System")
 
         # TODO: set the calendar values
@@ -197,10 +204,9 @@ class StockTradeProfitCalculator(QDialog):
 
             # Check if buy is before sell
             if buy_date > sell_date:
-                error_dialog = ErrorWindow(
-                    f"Selected buy date is after sell date, impossible calcul"
+                QMessageBox.critical(
+                    self, "Error", f"Selected buy date is after sell date, impossible calcul"
                 )
-                error_dialog.exec()
                 # Reset the labels
                 self.ResetCalculusLabels()
                 return
@@ -212,10 +218,10 @@ class StockTradeProfitCalculator(QDialog):
 
             # Check if stock is in data
             if selected_stock not in self.data:
-                error_dialog = ErrorWindow(
-                    f"Stock '{selected_stock}' is not available in the dataset."
+                
+                QMessageBox.critical(
+                    self, "Error", f"Stock '{selected_stock}' is not available in the dataset."
                 )
-                error_dialog.exec()
                 # Reset the labels
                 self.ResetCalculusLabels()
                 return
@@ -225,18 +231,16 @@ class StockTradeProfitCalculator(QDialog):
             sell_price = self.data[selected_stock].get(sell_date_tuple, None)
 
             if buy_price is None:
-                error_dialog = ErrorWindow(
-                    "The selected purchase date does not match our available data."
+                QMessageBox.critical(
+                    self, "Error", "The selected purchase date does not match our available data."
                 )
-                error_dialog.exec()
                 # Reset the labels
                 self.ResetCalculusLabels()
                 return
             if sell_price is None:
-                error_dialog = ErrorWindow(
-                    "The selected sell date does not match our available data."
+                QMessageBox.critical(
+                    self, "Error", "The selected sell date does not match our available data."
                 )
-                error_dialog.exec()
                 # Reset the labels
                 self.ResetCalculusLabels()
                 return
@@ -441,10 +445,9 @@ class StockTradeProfitCalculator(QDialog):
             palette.setColor(QPalette.ColorRole.Highlight, QColor("#6272A4"))
             palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#F8F8F2"))
         else:
-            error_dialog = ErrorWindow(
-                f"Themes {theme} does not exist going back to system theme."
+            QMessageBox.critical(
+                    self, "Error", f"Themes {theme} does not exist going back to system theme."
             )
-            error_dialog.exec()
             palette = QApplication.palette()
 
         # Apply the palette to the main window
@@ -468,7 +471,7 @@ class StockTradeProfitCalculator(QDialog):
         self.themeChanger.setStyleSheet(menu_style)
 
         # Update the tooltip with color cubes based on the selected theme
-        self.infoIconLabel.setToolTip(
+        self.info_text = (
             f"Calendar's Legend:<br>"
             f"• <span style='color: {stock_data_color};'>■</span> Indicates dates with stock data.<br>"
             f"• <span style='color: {no_data_color};'>■</span> Indicates dates without stock data."
@@ -477,29 +480,10 @@ class StockTradeProfitCalculator(QDialog):
         # Update the info frame background color
         self.infoFrame.setStyleSheet(f"background-color: {info_frame_color};")
 
-
-# Creating a class called ErrorWindow to show the problem to the user in case of a problem
-# like not having data of a stock at all or on a certain time
-class ErrorWindow(QDialog):
-    def __init__(self, message):
-        super().__init__()
-
-        # Set the window title
-        self.setWindowTitle("Error")
-
-        # Create a label with the error message
-        self.errorLabel = QLabel(message, self)
-
-        # Create an "OK" button to close the dialog
-        self.okButton = QPushButton("OK", self)
-        self.okButton.clicked.connect(self.accept)
-
-        # Arrange the label and button vertically
-        layout = QVBoxLayout()
-        layout.addWidget(self.errorLabel)
-        layout.addWidget(self.okButton)
-        self.setLayout(layout)
-
+    
+    # Method to display information
+    def show_info(self):
+        QMessageBox.information(self, "Info", self.info_text)
 
 # This is complete
 if __name__ == "__main__":
