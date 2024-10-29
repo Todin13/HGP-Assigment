@@ -1,12 +1,12 @@
 BSCH-HGP Assigment 1 todo list
 
-[] Allow the user to select a specific stock (e.g., Amazon, Tesla, Microsoft, etc.). 
-[] Allow the user to input the quantity of the stock purchased. 
-[] Allow the user to select the purchase date. 
-[] Display the total cost of the purchase. 
-[] Allow the user to select the sell date. 
-[] Display the total value at the time of sale. 
-[] Display the profit or loss. 
+[x] Allow the user to select a specific stock (e.g., Amazon, Tesla, Microsoft, etc.). 
+[x] Allow the user to input the quantity of the stock purchased. 
+[x] Allow the user to select the purchase date. 
+[x] Display the total cost of the purchase. 
+[x] Allow the user to select the sell date. 
+[x] Display the total value at the time of sale. 
+[x] Display the profit or loss. 
 [] Optional: Allow selection of multiple stocks for comparison. 
 [] Optional: Display additional information (if you choose to add this feature.). 
 [] Design file (explain design choice like color, position and all.).

@@ -2,6 +2,7 @@ import sys
 import csv
 from PyQt6.QtCore import QDate
 from PyQt6.QtWidgets import QLabel, QComboBox, QCalendarWidget, QDialog, QApplication, QGridLayout, QSpinBox, QPushButton, QVBoxLayout
+from PyQt6.QtGui import QTextCharFormat, QColor
 from datetime import datetime
 
 
@@ -112,11 +113,25 @@ class StockTradeProfitCalculator(QDialog):
         Updates the UI when control values are changed; should also be called when the app initializes.
         '''
         try:
+
+            # update the calendar to show the AvailableDate in different color
+            self.highlightAvailableDates()
+
             # TODO: get selected dates, stocks and quantity 
             selected_stock = self.stockComboBox.currentText()
             buy_date = self.buyCalendar.selectedDate()
             sell_date = self.sellCalendar.selectedDate()
             quantity = self.quantitySpinBox.value()
+
+            #Check if buy is before sell
+            if buy_date > sell_date:
+                error_dialog = ErrorWindow(f"Selected buy date is after sell date, impossible calcul")
+                error_dialog.exec()
+                # Reset the labels
+                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
+                self.sellTotalLabel.setText(f"Sell Total: 0")
+                self.profitTotalLabel.setText(f"Profit: 0")
+                return
 
             # TODO: perform necessary calculations to calculate totals
             # Convert QDates to tuples for dictionary lookup
@@ -165,8 +180,6 @@ class StockTradeProfitCalculator(QDialog):
             self.sellTotalLabel.setText(f"Sell Total: ${sell_total:.2f}")
             self.profitTotalLabel.setText(f"Profit: ${profit:.2f}")
 
-
-            pass  # placeholder for future code
         except Exception as e:
             print(f"Error in updateUi: {e}")
 
@@ -218,6 +231,35 @@ class StockTradeProfitCalculator(QDialog):
         except ValueError:
             print(f"Error parsing date: {date_string}")
             return None
+        
+    # function to higlight the day where we have data on the calendar
+    def highlightAvailableDates(self):
+        """
+        Highlights dates in the buy and sell calendars where data for the selected stock is available.
+        """
+        # Clear previous highlights
+        self.buyCalendar.setDateTextFormat(QDate(), QTextCharFormat())
+        self.sellCalendar.setDateTextFormat(QDate(), QTextCharFormat())
+
+        # Get selected stock
+        selected_stock = self.stockComboBox.currentText()
+        
+        # Check if the stock exists in data
+        if selected_stock not in self.data:
+            return
+        
+        # Format for highlighting dates with available data
+        highlight_format = QTextCharFormat()
+        highlight_format.setBackground(QColor("#FFD700"))  # Gold color for available dates
+
+        # Apply highlighting to available dates
+        for date_tuple in self.data[selected_stock].keys():
+            year, month, day = date_tuple
+            date = QDate(year, month, day)
+
+            # Set the format for both calendars
+            self.buyCalendar.setDateTextFormat(date, highlight_format)
+            self.sellCalendar.setDateTextFormat(date, highlight_format)
 
 # Creating a class called ErrorWindow to show the problem to the user in case of a problem 
 # like not having data of a stock at all or on a certain time
