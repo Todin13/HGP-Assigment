@@ -1,0 +1,37 @@
+                          BSC  -  HGP - Assignment 01
+                    CryptoCurrency Profit/Loss Calculator 
+                              UI Design Document
+Instructions
+Note: Completion of this document is required for your assignment to be graded.
+
+Submission: Edit this template and include it as part of your submission. This should be saved as a PDF.
+
+Length: Should be 4 pages approx. Word count is flexible, but all decisions should be clarified. 
+
+To achieve good marks ensure that this document is well structured and addresses each of the following headings and subheadings. The explanation of each UI Design Choice should be clear, precise and show substantial consideration has been made, references are welcome.  
+
+All decisions should be explained regardless of how basic they are. 
+
+Do not cut and paste justification from the internet (plagiarism) or notes, include references and explanations in your own words where appropriate. Marks will only be awarded for explanation of UI Design choices, not for code explanations. 
+
+
+ Include multiple screen shots of the application each focusing on a different component clearly labelled 
+ Clearly indicate what is working and what is not. 
+ Discuss each component under the following headings: 
+ Location: e.g. The button was placed in the bottom right to as it is the default location to confirm an action
+ Colour: The colour scheme was chosen to avoid the main form of colour blindness and produce high contrast for the visually impaired.
+ Size:
+ Style:
+ Etc.
+         
+         
+N.B. Clearly mention any additional features under a separate heading so that appropriate marks are awarded. 
+
+
+** Delete instructions text above this line before submission. **
+
+___________________________________________________________________________________
+
+Student Name: FirstName LastName 
+Student Number: 
+

@@ -1,0 +1,4 @@
+.venv
+poetry.lock
+Tutorials_PyQt6/img
+Tutorials_PyQt6/txtfiles
