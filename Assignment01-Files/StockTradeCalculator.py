@@ -69,23 +69,19 @@ class StockTradeProfitCalculator(QDialog):
                 QDate.currentDate()
             )  # Default to the current date
             # TODO: Define buyCalendarDefaultDate take ten days of differences if not references stock
-            self.buyCalendarDefaultDate = (
-                self.sellCalendarDefaultDate.addDays(-10)
-            ) 
+            self.buyCalendarDefaultDate = self.sellCalendarDefaultDate.addDays(-10)
             # Adding error message to tell the user if there is no stock available
             if not self.data.keys():
-                QMessageBox.critical(
-                    self, "Error", "No stock available, data error"
-                )
+                QMessageBox.critical(self, "Error", "No stock available, data error")
 
         # TODO: create QLabel for Stock selection
         self.stockLabel = QLabel("Select Stock:", self)
 
         # TODO: create QComboBox and populate it with a list of Stocks
         self.stockComboBox = QComboBox(self)
-        # sort stock
+        # sort stock
         stortedStock = sorted(self.data.keys())
-        self.stockComboBox.addItems(stortedStock) 
+        self.stockComboBox.addItems(stortedStock)
 
         # TODO: create CalendarWidgets for selection of purchase and sell dates
         self.buyCalendar = QCalendarWidget(self)
@@ -116,7 +112,9 @@ class StockTradeProfitCalculator(QDialog):
         #  Create a QFrame to hold the top bar
         self.infoFrame = QFrame()
         self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.infoFrame.setStyleSheet(f"background-color: {'grey'}")  # Init of the color to grey because not to strong for the eyes and can be good both in light and dark mode
+        self.infoFrame.setStyleSheet(
+            f"background-color: {'grey'}"
+        )  # Init of the color to grey because not to strong for the eyes and can be good both in light and dark mode
 
         # Theme changer
         self.themeChanger = QPushButton("Themes", self)
@@ -129,7 +127,7 @@ class StockTradeProfitCalculator(QDialog):
         self.infoIconLabel.setFixedSize(90, 20)
         self.infoIconLabel.setStyleSheet("font-size: 15px; padding: 0px; margin: 0px;")
 
-        # Init/Default info text shown on click on infoInconLabel 
+        # Init/Default info text shown on click on infoInconLabel
         self.info_text = (
             "Calendar's Legend:<br>"
             f"• <span>■</span> Indicates dates with stock data.<br>"
@@ -141,7 +139,6 @@ class StockTradeProfitCalculator(QDialog):
             "<br>"
             "Theme Button:<br>"
             "• Permit to change themes<br>"
-
         )
 
         # Connect the info button's clicked signal to a method
@@ -211,7 +208,7 @@ class StockTradeProfitCalculator(QDialog):
         # sell: most recent
         self.sellCalendar.setSelectedDate(self.sellCalendarDefaultDate)
 
-        # update the buy and sell line with selected date
+        # update the buy and sell line with selected date
         self.update_buy_line_edit()
         self.update_sell_line_edit()
 
@@ -234,7 +231,6 @@ class StockTradeProfitCalculator(QDialog):
         # TODO: update the UI
         self.updateUi()
 
-
     def updateUi(self):
         """
         This requires substantial development.
@@ -254,7 +250,9 @@ class StockTradeProfitCalculator(QDialog):
             # Check if buy is before sell
             if buy_date > sell_date:
                 QMessageBox.critical(
-                    self, "Error", f"Selected buy date is after sell date, impossible calcul"
+                    self,
+                    "Error",
+                    f"Selected buy date is after sell date, impossible calcul",
                 )
                 # Reset the labels
                 self.ResetCalculusLabels()
@@ -267,9 +265,11 @@ class StockTradeProfitCalculator(QDialog):
 
             # Check if stock is in data
             if selected_stock not in self.data:
-                
+
                 QMessageBox.critical(
-                    self, "Error", f"Stock '{selected_stock}' is not available in the dataset."
+                    self,
+                    "Error",
+                    f"Stock '{selected_stock}' is not available in the dataset.",
                 )
                 # Reset the labels
                 self.ResetCalculusLabels()
@@ -281,14 +281,18 @@ class StockTradeProfitCalculator(QDialog):
 
             if buy_price is None:
                 QMessageBox.critical(
-                    self, "Error", "The selected purchase date does not match our available data."
+                    self,
+                    "Error",
+                    "The selected purchase date does not match our available data.",
                 )
                 # Reset the labels
                 self.ResetCalculusLabels()
                 return
             if sell_price is None:
                 QMessageBox.critical(
-                    self, "Error", "The selected sell date does not match our available data."
+                    self,
+                    "Error",
+                    "The selected sell date does not match our available data.",
                 )
                 # Reset the labels
                 self.ResetCalculusLabels()
@@ -306,7 +310,9 @@ class StockTradeProfitCalculator(QDialog):
             self.profitTotalLabel.setText(f"Profit: ${profit:.2f}")
 
             # Update graph with selected stock
-            self.plot_stock_history(selected_stock, buy_date_tuple, sell_date_tuple, True)
+            self.plot_stock_history(
+                selected_stock, buy_date_tuple, sell_date_tuple, True
+            )
 
         except Exception as e:
             print(f"Error in updateUi: {e}")
@@ -369,7 +375,7 @@ class StockTradeProfitCalculator(QDialog):
         Update the buy calendar selection based on QLineEdit input.
         """
         date_text = self.buyDateInput.text()
-        year, month, day = map(int, date_text.split('-'))
+        year, month, day = map(int, date_text.split("-"))
         date = QDate(year, month, day)
         self.buyCalendar.setSelectedDate(date)
 
@@ -378,7 +384,7 @@ class StockTradeProfitCalculator(QDialog):
         Update the sell calendar selection based on QLineEdit input.
         """
         date_text = self.sellDateInput.text()
-        year, month, day = map(int, date_text.split('-'))
+        year, month, day = map(int, date_text.split("-"))
         date = QDate(year, month, day)
         self.sellCalendar.setSelectedDate(date)
 
@@ -395,7 +401,6 @@ class StockTradeProfitCalculator(QDialog):
         """
         selected_date = self.sellCalendar.selectedDate()
         self.sellDateInput.setText(selected_date.toString("yyyy-MM-dd"))
-
 
     def ResetCalculusLabels(self):
         self.purchaseTotalLabel.setText("Purchase Total: $0.00")
@@ -531,7 +536,9 @@ class StockTradeProfitCalculator(QDialog):
             palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#F8F8F2"))
         else:
             QMessageBox.critical(
-                    self, "Error", f"Themes {theme} does not exist going back to system theme."
+                self,
+                "Error",
+                f"Themes {theme} does not exist going back to system theme.",
             )
             palette = QApplication.palette()
 
@@ -542,7 +549,9 @@ class StockTradeProfitCalculator(QDialog):
         selection_color = self.palette().color(self.palette().ColorRole.Highlight)
         stock_data_color = selection_color.darker(150).name()
         no_data_color = "#A9A9A9"
-        text_data_color = self.palette().color(self.palette().ColorRole.WindowText).name()
+        text_data_color = (
+            self.palette().color(self.palette().ColorRole.WindowText).name()
+        )
         info_frame_color = selection_color.name()
 
         # Updating the menu_style
@@ -579,62 +588,71 @@ class StockTradeProfitCalculator(QDialog):
     def show_info(self):
         QMessageBox.information(self, "Info", self.info_text)
 
-    def plot_stock_history(self, stock_name, buy_date_tuple, sell_date_tuple, updateui=False):
+    def plot_stock_history(
+        self, stock_name, buy_date_tuple, sell_date_tuple, updateui=False
+    ):
         """
         Plots the historical price data for the selected stock with a specific timeframe.
         """
         # Clear the previous plot
         self.graphCanvas.figure.clf()
-        ax = self.graphCanvas.figure.add_subplot(111)        
-        
+        ax = self.graphCanvas.figure.add_subplot(111)
+
         # Get the stock data and sort it by date
         stock_dates = sorted(self.data[stock_name].keys())
-        filtered_dates = [date for date in stock_dates if buy_date_tuple <= date <= sell_date_tuple]
+        filtered_dates = [
+            date for date in stock_dates if buy_date_tuple <= date <= sell_date_tuple
+        ]
         prices = [self.data[stock_name][date] for date in filtered_dates]
-        
+
         # Convert dates to formatted strings for the x-axis
         date_strings = [f"{d[2]}-{d[1]}-{d[0]}" for d in filtered_dates]
-        
+
         title = f"{stock_name} Price History - Last {len(filtered_dates)} market days"
-        
+
         # Get color theme
         background = self.palette().color(self.palette().ColorRole.Window).name()
         text = self.palette().color(self.palette().ColorRole.WindowText).name()
         graph_color = self.palette().color(self.palette().ColorRole.Highlight).name()
 
         # Set background color
-        ax.set_facecolor(background)  
+        ax.set_facecolor(background)
         self.graphCanvas.figure.patch.set_facecolor(background)
-        
-         # Set box (spines) color
+
+        # Set box (spines) color
         for spine in ax.spines.values():
-            spine.set_color(text) 
+            spine.set_color(text)
 
         # Plot the complete data
         ax.plot(date_strings, prices, label=stock_name, color=graph_color)
         ax.set_title(title, color=text)
         ax.set_xlabel("Date", color=text)
         ax.set_ylabel("Price ($)", color=text)
-        
+
         # Set x-axis tick labels to show only around 10 dates
         if len(date_strings) > 10:
             step = len(date_strings) // 10
             ax.set_xticks(range(0, len(date_strings), step))
-        
+
         # Set x-axis tick label colors
-        ax.tick_params(axis='x', rotation=45, colors=text)
-        ax.tick_params(axis='y', colors=text)
-        
+        ax.tick_params(axis="x", rotation=45, colors=text)
+        ax.tick_params(axis="y", colors=text)
+
         # Adjust the layout to minimize space at the top
-        self.graphCanvas.figure.subplots_adjust(top=0.9, bottom=0.2, left=0.15, right=0.9) 
+        self.graphCanvas.figure.subplots_adjust(
+            top=0.9, bottom=0.2, left=0.15, right=0.9
+        )
 
         # Render the canvas
         self.graphCanvas.draw()
-        
+
         if updateui == False:
             # Adjust figure size to match the window size if not updating ui
-            self.graphCanvas.figure.set_size_inches(self.graphCanvas.width()/self.graphCanvas.devicePixelRatio(), 
-                                        self.graphCanvas.height()/self.graphCanvas.devicePixelRatio())
+            self.graphCanvas.figure.set_size_inches(
+                self.graphCanvas.width() / self.graphCanvas.devicePixelRatio(),
+                self.graphCanvas.height() / self.graphCanvas.devicePixelRatio(),
+            )
+
 
 # This is complete
 if __name__ == "__main__":
