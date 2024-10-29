@@ -12,3 +12,6 @@ check:
 
 format:
 	poetry run black .
+
+run:
+	poetry run python StockTradeCalculator.py
