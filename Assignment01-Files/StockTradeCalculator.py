@@ -92,13 +92,15 @@ class StockTradeProfitCalculator(QDialog):
 
         #  Create a QFrame to hold the info icon label with a box around it
         self.infoFrame = QFrame()
-        self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel) 
+        self.infoFrame.setFrameShape(QFrame.Shape.StyledPanel)
         self.infoFrame.setStyleSheet(f"background-color: {'grey'}")
 
         # Create a QLabel for the information icon
         self.infoIconLabel = QLabel("info")
-        self.infoIconLabel.setStyleSheet("font-size: 15px;")  
-        self.infoIconLabel.setAlignment(Qt.AlignmentFlag.AlignRight)  # Align to the right
+        self.infoIconLabel.setStyleSheet("font-size: 15px;")
+        self.infoIconLabel.setAlignment(
+            Qt.AlignmentFlag.AlignRight
+        )  # Align to the right
 
         # HTML for tooltip with color cubes
         self.infoIconLabel.setToolTip(
@@ -110,7 +112,7 @@ class StockTradeProfitCalculator(QDialog):
         # Add the info icon label to the frame
         frameLayout = QHBoxLayout(self.infoFrame)
         frameLayout.addWidget(self.infoIconLabel)  # Align the icon to the right
-        frameLayout.setContentsMargins(5, 0, 5, 0)  
+        frameLayout.setContentsMargins(5, 0, 5, 0)
         frameLayout.setSpacing(5)
 
         mainLayout = QVBoxLayout()
@@ -131,7 +133,7 @@ class StockTradeProfitCalculator(QDialog):
         # Set the content margin of the body layout
         bodyLayout.setContentsMargins(10, 10, 10, 10)
 
-        # Adding the stock choosing box
+        # Adding the stock choosing box
         bodyLayout.addWidget(self.stockLabel, 1, 0)
         bodyLayout.addWidget(self.stockComboBox, 1, 1)
 
@@ -296,7 +298,7 @@ class StockTradeProfitCalculator(QDialog):
         except ValueError:
             print(f"Error parsing date: {date_string}")
             return None
-        
+
     def InitQlabels(self):
         self.purchaseTotalLabel = QLabel("Purchase Total: $0.00", self)
         self.sellTotalLabel = QLabel("Sell Total: $0.00", self)
@@ -322,7 +324,9 @@ class StockTradeProfitCalculator(QDialog):
 
         # Define formats using the darker selection color
         available_format = QTextCharFormat()
-        available_format.setBackground(darker_selection_color)  # Darker selection color for available dates
+        available_format.setBackground(
+            darker_selection_color
+        )  # Darker selection color for available dates
 
         unavailable_format = QTextCharFormat()
         unavailable_format.setForeground(
