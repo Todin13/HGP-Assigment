@@ -138,6 +138,10 @@ class StockTradeProfitCalculator(QDialog):
             "Graph's Legend:<br>"
             f"• <span>-</span> Indicates the stock values in $.<br>"
             f"• Markets day indicates the days where we have the values of the stocks<br>"
+            "<br>"
+            "Theme Button:<br>"
+            "• Permit to change themes<br>"
+
         )
 
         # Connect the info button's clicked signal to a method
@@ -559,6 +563,10 @@ class StockTradeProfitCalculator(QDialog):
             "Graph's Legend:<br>"
             f"• <span  style='color: {stock_data_color};'>---</span> Indicates the stock values in $.<br>"
             f"• Markets day indicates the days where we have the values of the stocks<br>"
+            "<br>"
+            "Theme Button:<br>"
+            "• Permit to change themes<br>"
+            "<br>"
         )
 
         # Update the info frame background color
