@@ -37,9 +37,13 @@ class StockTradeProfitCalculator(QDialog):
         else:
             print("Amazon not found in the dataset. Available stocks:", self.data.keys())
             self.sellCalendarDefaultDate = QDate.currentDate()  # Default to the current date
+            # Adding error message to tell the user if there is no stock available
+            if not self.data.keys():
+                error_dialog = ErrorWindow("No stock available, data error")
+                error_dialog.exec()
 
         # TODO: Define buyCalendarDefaultDate
-        self.buyCalendarDefaultDate = self.sellCalendarDefaultDate.addDays(-14)
+        self.buyCalendarDefaultDate = self.sellCalendarDefaultDate # setting to be the same as selldefaultDate to not have problem.
 
         # TODO: create QLabel for Stock selection
         self.stockLabel = QLabel("Select Stock:", self)
@@ -123,6 +127,10 @@ class StockTradeProfitCalculator(QDialog):
             if selected_stock not in self.data:
                 error_dialog = ErrorWindow(f"Stock '{selected_stock}' is not available in the dataset.")
                 error_dialog.exec()
+                # Reset the labels
+                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
+                self.sellTotalLabel.setText(f"Sell Total: 0")
+                self.profitTotalLabel.setText(f"Profit: 0")
                 return
 
             # Check if the selected dates are in the data for this stock
@@ -132,10 +140,18 @@ class StockTradeProfitCalculator(QDialog):
             if buy_price is None:
                 error_dialog = ErrorWindow("The selected purchase date does not match our available data.")
                 error_dialog.exec()
+                # Reset the labels
+                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
+                self.sellTotalLabel.setText(f"Sell Total: 0")
+                self.profitTotalLabel.setText(f"Profit: 0")
                 return
             if sell_price is None:
                 error_dialog = ErrorWindow("The selected sell date does not match our available data.")
                 error_dialog.exec()
+                # Reset the labels
+                self.purchaseTotalLabel.setText(f"Purchase Total: 0")
+                self.sellTotalLabel.setText(f"Sell Total: 0")
+                self.profitTotalLabel.setText(f"Profit: 0")
                 return
 
             # Calculate totals
