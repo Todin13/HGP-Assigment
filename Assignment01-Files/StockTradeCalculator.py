@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
     QMenu,
     QHBoxLayout,
     QMessageBox,
+    QLineEdit,
 )
 
 
@@ -82,7 +83,9 @@ class StockTradeProfitCalculator(QDialog):
 
         # TODO: create QComboBox and populate it with a list of Stocks
         self.stockComboBox = QComboBox(self)
-        self.stockComboBox.addItems(self.data.keys())
+        # sort stock
+        stortedStock = sorted(self.data.keys())
+        self.stockComboBox.addItems(stortedStock) 
 
         # TODO: create CalendarWidgets for selection of purchase and sell dates
         self.buyCalendar = QCalendarWidget(self)
@@ -91,6 +94,14 @@ class StockTradeProfitCalculator(QDialog):
         # Set default dates for calendars
         self.buyCalendar.setSelectedDate(self.buyCalendarDefaultDate)
         self.sellCalendar.setSelectedDate(self.sellCalendarDefaultDate)
+
+        # Create QLineEdits for date input
+        self.buyDateInput = QLineEdit(self)
+        self.sellDateInput = QLineEdit(self)
+
+        # Set placeholder texts for QLineEdits
+        self.buyDateInput.setPlaceholderText("Enter Buy Date (YYYY-MM-DD)")
+        self.sellDateInput.setPlaceholderText("Enter Buy Date (YYYY-MM-DD)")
 
         # TODO: create QSpinBox to select Stock quantity purchased
         self.quantitySpinBox = QSpinBox(self)
@@ -162,16 +173,22 @@ class StockTradeProfitCalculator(QDialog):
         bodyLayout.addWidget(self.stockComboBox, 0, 1)
 
         # Add the sell and buy calendar
-        bodyLayout.addWidget(QLabel("Purchase Date:"), 1, 0)
-        bodyLayout.addWidget(self.buyCalendar, 1, 1)  # Buy calendar below
-        bodyLayout.addWidget(QLabel("Sell Date:"), 2, 0)
-        bodyLayout.addWidget(self.sellCalendar, 2, 1)  # Sell calendar below
+        bodyLayout.addWidget(QLabel("Buy Date:"), 2, 0)
+        bodyLayout.addWidget(self.buyCalendar, 2, 1)  # Buy calendar below
+        bodyLayout.addWidget(QLabel("Sell Date:"), 4, 0)
+        bodyLayout.addWidget(self.sellCalendar, 4, 1)  # Sell calendar below
 
-        bodyLayout.addWidget(QLabel("Quantity:"), 3, 0)
-        bodyLayout.addWidget(self.quantitySpinBox, 3, 1)
-        bodyLayout.addWidget(self.purchaseTotalLabel, 4, 0, 1, 2)
-        bodyLayout.addWidget(self.sellTotalLabel, 5, 0, 1, 2)
-        bodyLayout.addWidget(self.profitTotalLabel, 6, 0, 1, 2)
+        # Add QLineEdits for dates
+        bodyLayout.addWidget(QLabel("Buy Date Input:"), 1, 0)
+        bodyLayout.addWidget(self.buyDateInput, 1, 1)
+        bodyLayout.addWidget(QLabel("Sell Date Input:"), 3, 0)
+        bodyLayout.addWidget(self.sellDateInput, 3, 1)
+
+        bodyLayout.addWidget(QLabel("Quantity:"), 5, 0)
+        bodyLayout.addWidget(self.quantitySpinBox, 5, 1)
+        bodyLayout.addWidget(self.purchaseTotalLabel, 6, 0, 1, 2)
+        bodyLayout.addWidget(self.sellTotalLabel, 7, 0, 1, 2)
+        bodyLayout.addWidget(self.profitTotalLabel, 8, 0, 1, 2)
 
         # Graph Canvas
         self.graphCanvas = FigureCanvas(plt.Figure())
@@ -190,16 +207,29 @@ class StockTradeProfitCalculator(QDialog):
         # sell: most recent
         self.sellCalendar.setSelectedDate(self.sellCalendarDefaultDate)
 
+        # update the buy and sell line with selected date
+        self.update_buy_line_edit()
+        self.update_sell_line_edit()
+
         # TODO: connecting signals to slots so that a change in one control updates the UI
         self.stockComboBox.currentIndexChanged.connect(self.updateUi)
         self.buyCalendar.selectionChanged.connect(self.updateUi)
         self.sellCalendar.selectionChanged.connect(self.updateUi)
         self.quantitySpinBox.valueChanged.connect(self.updateUi)
 
+        # Connect QLineEdits to calendar update
+        self.buyDateInput.editingFinished.connect(self.update_buy_calendar)
+        self.sellDateInput.editingFinished.connect(self.update_sell_calendar)
+
+        # Connect calendars to QLineEdits
+        self.buyCalendar.clicked.connect(self.update_buy_line_edit)
+        self.sellCalendar.clicked.connect(self.update_sell_line_edit)
+
         # TODO: set the window title
         self.setWindowTitle("Stock Trade Profit Calculator")
         # TODO: update the UI
         self.updateUi()
+
 
     def updateUi(self):
         """
@@ -329,6 +359,39 @@ class StockTradeProfitCalculator(QDialog):
         except ValueError:
             print(f"Error parsing date: {date_string}")
             return None
+
+    def update_buy_calendar(self):
+        """
+        Update the buy calendar selection based on QLineEdit input.
+        """
+        date_text = self.buyDateInput.text()
+        year, month, day = map(int, date_text.split('-'))
+        date = QDate(year, month, day)
+        self.buyCalendar.setSelectedDate(date)
+
+    def update_sell_calendar(self):
+        """
+        Update the sell calendar selection based on QLineEdit input.
+        """
+        date_text = self.sellDateInput.text()
+        year, month, day = map(int, date_text.split('-'))
+        date = QDate(year, month, day)
+        self.sellCalendar.setSelectedDate(date)
+
+    def update_buy_line_edit(self):
+        """
+        Update the QLineEdit with the currently selected date from the buy calendar.
+        """
+        selected_date = self.buyCalendar.selectedDate()
+        self.buyDateInput.setText(selected_date.toString("yyyy-MM-dd"))
+
+    def update_sell_line_edit(self):
+        """
+        Update the QLineEdit with the currently selected date from the sell calendar.
+        """
+        selected_date = self.sellCalendar.selectedDate()
+        self.sellDateInput.setText(selected_date.toString("yyyy-MM-dd"))
+
 
     def ResetCalculusLabels(self):
         self.purchaseTotalLabel.setText("Purchase Total: $0.00")
