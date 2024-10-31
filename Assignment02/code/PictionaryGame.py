@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QColorDialog,
 )
 
 
@@ -84,6 +85,29 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         brushColorMenu = mainMenu.addMenu(
             " Brush Colour"
         )  # add the "Brush Colour" menu to the menu bar
+
+        helpButton = mainMenu.addAction(" ? ")  # adding help button to menu bar adding space as it's the style of the bar
+
+        # help button action
+        self.helpMessage = (
+            f"<b>Welcome to Pictionary Game!</b><br><br>"
+            f"<b>Instructions:</b><br>"
+            f"- Use the left mouse button to draw on the canvas.<br>"
+            f"- Select brush size and color from the menu.<br>"
+            f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
+            f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br><br>"
+            f"<b>Shortcuts:</b><br>"
+            f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
+            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y).<br>"
+            f"- Clear the canvas: (Ctrl+C) <br>"
+            f"- Save the canvas: (Ctrl+S) <br><br>"
+            f"<b>Game Information:</b><br>"
+            f"- Each player takes turns drawing a word.<br>"
+            f"- Words are randomly selected from an external file based on difficulty.<br>"
+            f"- Check the left sidebar for current turn and player scores.<br><br>"
+            f"<i>Enjoy playing!</i>"
+        )# Define help text
+        helpButton.triggered.connect(self.helpMessageBox) # Connecting to the help message pop up window when click on " help" button
 
         # save menu item
         saveAction = QAction(
@@ -154,6 +178,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         yellowAction.setShortcut("Ctrl+Y")
         brushColorMenu.addAction(yellowAction)
         yellowAction.triggered.connect(self.yellow)
+
+        # Action for the color picker to the Brush Colour menu
+        colorPickerAction = QAction(QIcon("./icons/color-picker.png"), "Choose Color", self)
+        colorPickerAction.setShortcut("Ctrl+P")
+        brushColorMenu.addAction(colorPickerAction)
+        colorPickerAction.triggered.connect(self.openColorPicker)
 
         # Side Dock
         self.dockInfo = QDockWidget()
@@ -245,6 +275,28 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def resizeEvent(self, event):
         self.image = self.image.scaled(self.width(), self.height())
 
+
+    def helpMessageBox(self):
+        """
+        Creating the Help message pop up window
+        """
+        QMessageBox.information(self, " Help", self.helpMessage) 
+
+    def openColorPicker(self):
+        """
+        Open a color dialog and get the selected color
+        """
+        color = QColorDialog.getColor()  # Open a color dialog to choose a color
+        
+        if color.isValid():  # if the color is valid, set it 
+            self.changeBrushColor(color)
+
+    def changeBrushColor(self, color):
+        """
+        Change the brush color to the selected color from QColorDialog.
+        """
+        self.brushColor = color
+
     # slots
     def save(self):
         filePath, _ = QFileDialog.getSaveFileName(
@@ -273,9 +325,6 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.brushSize = 9
 
     def black(self):  # the brush color is set to black
-        self.brushColor = Qt.GlobalColor.black
-
-    def black(self):
         self.brushColor = Qt.GlobalColor.black
 
     def red(self):
