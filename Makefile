@@ -11,8 +11,6 @@ run:
 check:
 	@echo "Running Black"
 	poetry run black --check .
-	@echo "Running isort"
-	poetry run isort --check .
 	@echo "Running mypy"
 	poetry run mypy .
 	@echo "Running Vulture"
@@ -23,13 +21,8 @@ check:
 style:
 	@echo "Running Black"
 	poetry run black .
-	@echo "Running isort..."
-	poetry run isort .
 	@echo ""
 	@echo "All goods !!!"
 
 black:
 	poetry run black .
-
-isort:
-	poetry run isort .

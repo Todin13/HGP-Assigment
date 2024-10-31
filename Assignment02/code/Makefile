@@ -15,8 +15,6 @@ check:
 style:
 	@echo "Running Black"
 	poetry run black .
-	@echo "Running isort..."
-	poetry run isort .
 	@echo ""
 	@echo "All goods !!!"
 
