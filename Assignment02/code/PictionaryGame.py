@@ -98,14 +98,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br><br>"
             f"<b>Shortcuts:</b><br>"
             f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
-            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y).<br>"
+            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) or use the Palette to choose another one (Ctrl+P).<br>"
             f"- Clear the canvas: (Ctrl+C) <br>"
             f"- Save the canvas: (Ctrl+S) <br><br>"
             f"<b>Game Information:</b><br>"
             f"- Each player takes turns drawing a word.<br>"
             f"- Words are randomly selected from an external file based on difficulty.<br>"
-            f"- Check the left sidebar for current turn and player scores.<br><br>"
-            f"<i>Enjoy playing!</i>"
+            f"- Check the left sidebar for current turn and player scores.<br>"
+            f"<br><i>Enjoy playing!</i>"
         )# Define help text
         helpButton.triggered.connect(self.helpMessageBox) # Connecting to the help message pop up window when click on " help" button
 
