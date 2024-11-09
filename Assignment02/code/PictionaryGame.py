@@ -24,6 +24,11 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QColorDialog,
+    QSpinBox,
+    QDialog,
+    QComboBox,
+    QFormLayout,
+    QDialogButtonBox,
 )
 
 
@@ -36,7 +41,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         super().__init__()
 
         # set window title
-        self.setWindowTitle("Pictionary Game - A2 Template")
+        self.setWindowTitle("Pictionary Game")
 
         # set the windows dimensions
         top = 400
@@ -73,20 +78,34 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # reference to last point recorded by mouse
         self.lastPoint = QPoint()  # documentation: https://doc.qt.io/qt-6/qpoint.html
 
+        # Initialize default game settings
+        self.time_limit = 60  # Default time in seconds
+        self.rounds = 5  # Default number of rounds
+        self.difficulty = "easy"  # Default word list difficulty
+
         # set up menus
         mainMenu = self.menuBar()  # create a menu bar
         mainMenu.setNativeMenuBar(False)
         fileMenu = mainMenu.addMenu(
-            " File"
+            " File "
         )  # add the file menu to the menu bar, the space is required as "File" is reserved in Mac
         brushSizeMenu = mainMenu.addMenu(
-            " Brush Size"
+            " Brush Size "
         )  # add the "Brush Size" menu to the menu bar
         brushColorMenu = mainMenu.addMenu(
-            " Brush Colour"
+            " Brush Colour "
         )  # add the "Brush Colour" menu to the menu bar
 
-        helpButton = mainMenu.addAction(" ? ")  # adding help button to menu bar adding space as it's the style of the bar
+        game_setting_menu = mainMenu.addAction(
+            " Game Setting "
+        )  # add " Game Setting" menu to the menu bar
+
+        helpButton = mainMenu.addAction(
+            " ? "
+        )  # adding help button to menu bar adding space as it's the style of the bar
+
+        # Connecting the button game setting to the setting window
+        game_setting_menu.triggered.connect(self.update_game_setting)
 
         # help button action
         self.helpMessage = (
@@ -95,7 +114,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"- Use the left mouse button to draw on the canvas.<br>"
             f"- Select brush size and color from the menu.<br>"
             f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
-            f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br><br>"
+            f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br>"
+            f"- Select a new canvas by selecting 'Open' (Ctrl+O).<br><br>"
             f"<b>Shortcuts:</b><br>"
             f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
             f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) or use the Palette to choose another one (Ctrl+P).<br>"
@@ -106,8 +126,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"- Words are randomly selected from an external file based on difficulty.<br>"
             f"- Check the left sidebar for current turn and player scores.<br>"
             f"<br><i>Enjoy playing!</i>"
-        )# Define help text
-        helpButton.triggered.connect(self.helpMessageBox) # Connecting to the help message pop up window when click on " help" button
+        )  # Define help text
+        helpButton.triggered.connect(
+            self.helpMessageBox
+        )  # Connecting to the help message pop up window when click on " help" button
 
         # save menu item
         saveAction = QAction(
@@ -134,6 +156,18 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         clearAction.triggered.connect(
             self.clear
         )  # when the menu option is selected or the shortcut is used the clear slot is triggered
+
+        # open
+        openAction = QAction(
+            QIcon("./icons/folder.png"), "Open", self
+        )  # create an open action to open file
+        openAction.setShortcut(
+            "Ctrl+O"
+        )  # connect the open action to a keyboard shortcut
+        fileMenu.addAction(openAction)  # add this action to the file menu
+        openAction.triggered.connect(
+            self.open
+        )  # when the menu option is selected or the shortcut is used the open slot is triggered
 
         # brush thickness
         threepxAction = QAction(QIcon("./icons/threepx.png"), "3px", self)
@@ -180,7 +214,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         yellowAction.triggered.connect(self.yellow)
 
         # Action for the color picker to the Brush Colour menu
-        colorPickerAction = QAction(QIcon("./icons/color-picker.png"), "Choose Color", self)
+        colorPickerAction = QAction(
+            QIcon("./icons/color-wheel.png"), "Choose Color", self
+        )
         colorPickerAction.setShortcut("Ctrl+P")
         brushColorMenu.addAction(colorPickerAction)
         colorPickerAction.triggered.connect(self.openColorPicker)
@@ -193,7 +229,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         playerInfo = QWidget()
         self.vbdock = QVBoxLayout()
         playerInfo.setLayout(self.vbdock)
-        playerInfo.setMaximumSize(100, self.height())
+        playerInfo.setMaximumSize(160, self.height())
         # add controls to custom widget
         self.vbdock.addWidget(QLabel("Current Turn: -"))
         self.vbdock.addSpacing(20)
@@ -201,7 +237,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.vbdock.addWidget(QLabel("Player 1: -"))
         self.vbdock.addWidget(QLabel("Player 2: -"))
         self.vbdock.addStretch(1)
-        self.vbdock.addWidget(QPushButton("Button"))
+
+        # create the starting button
+        start_button = QPushButton("Start")
+        start_button.clicked.connect(self.start_game)
+
+        self.vbdock.addWidget(start_button)
 
         # Setting colour of dock to gray
         playerInfo.setAutoFillBackground(True)
@@ -212,7 +253,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # set widget for dock
         self.dockInfo.setWidget(playerInfo)
 
-        self.getList("easy")
+        # Initialize the current word list
+        self.getList(self.difficulty)
         self.currentWord = self.getWord()
 
     # event handlers
@@ -275,20 +317,19 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def resizeEvent(self, event):
         self.image = self.image.scaled(self.width(), self.height())
 
-
     def helpMessageBox(self):
         """
         Creating the Help message pop up window
         """
-        QMessageBox.information(self, " Help", self.helpMessage) 
+        QMessageBox.information(self, " Help", self.helpMessage)
 
     def openColorPicker(self):
         """
         Open a color dialog and get the selected color
         """
         color = QColorDialog.getColor()  # Open a color dialog to choose a color
-        
-        if color.isValid():  # if the color is valid, set it 
+
+        if color.isValid():  # if the color is valid, set it
             self.changeBrushColor(color)
 
     def changeBrushColor(self, color):
@@ -378,6 +419,64 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             width, height
         )  # scale the image from file and put it in your QImage
         self.update()  # call the update method of the widget which calls the paintEvent of this class
+
+    def update_game_setting(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Game Settings")
+
+        # Time limit (seconds per round)
+        time_spinbox = QSpinBox()
+        time_spinbox.setRange(10, 300)
+        time_spinbox.setValue(self.time_limit)
+
+        # Number of rounds
+        rounds_spinbox = QSpinBox()
+        rounds_spinbox.setRange(1, 20)
+        rounds_spinbox.setValue(self.rounds)
+
+        # Difficulty level
+        difficulty_combo = QComboBox()
+        difficulty_combo.addItems(["easy", "medium", "hard"])
+        difficulty_combo.setCurrentText(self.difficulty)
+
+        # Layout for settings dialog
+        form_layout = QFormLayout()
+        form_layout.addRow("Time per round (s):", time_spinbox)
+        form_layout.addRow("Number of rounds:", rounds_spinbox)
+        form_layout.addRow("Difficulty:", difficulty_combo)
+
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+
+        layout = QVBoxLayout(dialog)
+        layout.addLayout(form_layout)
+        layout.addWidget(button_box)
+
+        # Show dialog and update settings if accepted
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.time_limit = time_spinbox.value()
+            self.rounds = rounds_spinbox.value()
+            self.difficulty = difficulty_combo.currentText()
+            self.update_game_settings()
+
+    def update_game_settings(self):
+        # Update logic for game settings (e.g., timer, number of rounds, difficulty)
+        print(
+            f"Settings Updated - Time per Round: {self.time_limit} sec, Rounds: {self.rounds}, Difficulty: {self.difficulty}"
+        )
+
+    def start_game(self):
+        pass
+
+    def show_word(self):
+        pass
+
+    def update_points(self):
+        pass
 
 
 # this code will be executed if it is the main module but not if the module is imported
