@@ -99,18 +99,20 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         fileMenu = mainMenu.addMenu(
             " File "
         )  # add the file menu to the menu bar, the space is required as "File" is reserved in Mac
-        
+
         # Add Eraser option
-        eraserAction = QAction(QIcon("./icons/eraser.png"), "Eraser", self)
+        eraserAction = QAction(QIcon("./icons/eraser.png"), "", self)
         eraserAction.setShortcut("Ctrl+E")
         mainMenu.addAction(eraserAction)
         eraserAction.triggered.connect(self.activateEraser)
+        eraserAction.setShortcut("Ctrl+E")  # set shortcut for earser
 
         # Restore Brush option
-        restoreBrushAction = QAction(QIcon("./icons/brush.png"), "Restore Brush", self)
+        restoreBrushAction = QAction(QIcon("./icons/pen.png"), "", self)
         restoreBrushAction.setShortcut("Ctrl+R")
         mainMenu.addAction(restoreBrushAction)
         restoreBrushAction.triggered.connect(self.restoreBrush)
+        restoreBrushAction.setShortcut("Ctrl+R")  # set shortcut for  restor brush
 
         brushSizeMenu = mainMenu.addMenu(
             " Brush Size "
@@ -118,7 +120,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         brushColorMenu = mainMenu.addMenu(
             " Brush Colour "
         )  # add the "Brush Colour" menu to the menu barself.capStyle, self.joinStyle
-        brushStyleMenu = mainMenu.addMenu(" Brush Style ") # adding brush style menu
+        brushStyleMenu = mainMenu.addMenu(" Brush Style ")  # adding brush style menu
         game_setting_menu = mainMenu.addAction(
             " Game Setting "
         )  # add " Game Setting" menu to the menu bar
@@ -135,19 +137,31 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"<b>Welcome to Pictionary Game!</b><br><br>"
             f"<b>Instructions:</b><br>"
             f"- Use the left mouse button to draw on the canvas.<br>"
-            f"- Select brush size and color from the menu.<br>"
+            f"- Use the eraser (Ctrl+E) to erase parts of your drawing.<br>"
+            f"- Select brush size, style, and color from the menu.<br>"
             f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
             f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br>"
-            f"- Select a new canvas by selecting 'Open' (Ctrl+O).<br><br>"
+            f"- Open a new canvas by selecting 'Open' (Ctrl+O).<br>"
+            f"- Start the game by clicing on the start button on bottom right.<br><br>"
             f"<b>Shortcuts:</b><br>"
             f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
-            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) or use the Palette to choose another one (Ctrl+P).<br>"
+            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) "
+            f"or choose from the color palette (Ctrl+P).<br>"
+            f"- Select brush style: Solid, Dashed, or Dotted.<br>"
+            f"- Set brush cap style: Round, Square, or Flat.<br>"
+            f"- Set brush join style: Round, Bevel, or Miter.<br>"
+            f"- Use the eraser tool: (Ctrl+E) <br>"
+            f"- Restore brush after erasing: (Ctrl+R) <br>"
             f"- Clear the canvas: (Ctrl+C) <br>"
             f"- Save the canvas: (Ctrl+S) <br><br>"
+            f"<b>Game Settings:</b><br>"
+            f"- Customize game settings in the 'Game Setting' menu.<br>"
+            f"- Default settings: 30 seconds for drawing, 10 seconds for guessing, "
+            f"5 rounds, and 'Easy' difficulty.<br><br>"
             f"<b>Game Information:</b><br>"
-            f"- Each player takes turns drawing a word.<br>"
-            f"- Words are randomly selected from an external file based on difficulty.<br>"
-            f"- Check the left sidebar for current turn and player scores.<br>"
+            f"- Players take turns to draw randomly selected words.<br>"
+            f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
+            f"- The timer displays the remaining time for each turn.<br>"
             f"<br><i>Enjoy playing!</i>"
         )  # Define help text
         helpButton.triggered.connect(
@@ -179,7 +193,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         clearAction.triggered.connect(
             self.clear
         )  # when the menu option is selected or the shortcut is used the clear slot is triggered
-        
+
         # open
         openAction = QAction(
             QIcon("./icons/folder.png"), "Open", self
@@ -200,17 +214,17 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         )  # connect the action to the function below
         threepxAction.triggered.connect(self.threepx)
 
-        fivepxAction = QAction(QIcon("./icons/fivepx.png"), "5px", self)
+        fivepxAction = QAction("5px", self)
         fivepxAction.setShortcut("Ctrl+5")
         brushSizeMenu.addAction(fivepxAction)
         fivepxAction.triggered.connect(self.fivepx)
 
-        sevenpxAction = QAction(QIcon("./icons/sevenpx.png"), "7px", self)
+        sevenpxAction = QAction("7px", self)
         sevenpxAction.setShortcut("Ctrl+7")
         brushSizeMenu.addAction(sevenpxAction)
         sevenpxAction.triggered.connect(self.sevenpx)
 
-        ninepxAction = QAction(QIcon("./icons/ninepx.png"), "9px", self)
+        ninepxAction = QAction("9px", self)
         ninepxAction.setShortcut("Ctrl+9")
         brushSizeMenu.addAction(ninepxAction)
         ninepxAction.triggered.connect(self.ninepx)
@@ -244,11 +258,15 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         brushColorMenu.addAction(colorPickerAction)
         colorPickerAction.triggered.connect(self.openColorPicker)
 
-        lineStyleMenu = brushStyleMenu.addMenu(" Line Style ") # add the Brush Style menu
-        capStyleMenu = brushStyleMenu.addMenu(" Cap Style ") # add the Cap Style menu
-        joinStyleMenu = brushStyleMenu.addMenu(" Join Style ") # add the Join Style menu
+        lineStyleMenu = brushStyleMenu.addMenu(
+            " Line Style "
+        )  # add the Brush Style menu
+        capStyleMenu = brushStyleMenu.addMenu(" Cap Style ")  # add the Cap Style menu
+        joinStyleMenu = brushStyleMenu.addMenu(
+            " Join Style "
+        )  # add the Join Style menu
 
-        # Brush style
+        # Brush style
         solidAction = QAction("Solid", self)
         solidAction.triggered.connect(self.setSolidStyle)
         lineStyleMenu.addAction(solidAction)
@@ -339,6 +357,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # set widget for dock
         self.dockInfo.setWidget(playerInfo)
+        self.dockInfo.setAutoFillBackground(True)
 
         # Initialize the current word list
         self.getList(self.difficulty)
@@ -370,14 +389,24 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
                 self.image
             )  # object which allows drawing to take place on an image
             # allows the selection of brush colour, brish size, line type, cap type, join type. Images available here http://doc.qt.io/qt-6/qpen.html
-            
-             # Set eraser mode if eraser is active
+
+            # Set eraser mode if eraser is active
             if self.isEraserActive:
                 # Eraser mode
-                painter.setPen(QPen(Qt.GlobalColor.white, self.brushSize, Qt.PenStyle.SolidLine))
+                painter.setPen(
+                    QPen(Qt.GlobalColor.white, self.brushSize, Qt.PenStyle.SolidLine)
+                )
             else:
                 # Normal drawing mode
-                painter.setPen(QPen(self.brushColor, self.brushSize, self.brushStyle, self.capStyle, self.joinStyle))
+                painter.setPen(
+                    QPen(
+                        self.brushColor,
+                        self.brushSize,
+                        self.brushStyle,
+                        self.capStyle,
+                        self.joinStyle,
+                    )
+                )
 
             painter.drawLine(
                 self.lastPoint, event.pos()
@@ -456,7 +485,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
     def setBevelJoin(self):
         self.joinStyle = Qt.PenJoinStyle.BevelJoin
-    
+
     def setMiterJoin(self):
         self.joinStyle = Qt.PenJoinStyle.MiterJoin
 
@@ -686,7 +715,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # Create a button to submit the answer
         submit_button = QPushButton("Submit Answer")
         submit_button.setStyleSheet("text-align: center;")
-        submit_button.clicked.connect(lambda: self.submit_answer(answer_input.text(), dialog))
+        submit_button.clicked.connect(
+            lambda: self.submit_answer(answer_input.text(), dialog)
+        )
         grid_layout.addWidget(submit_button, 4, 0, 1, 2)
 
         # Set margins and spacing for the grid layout
@@ -843,7 +874,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.swap_turn
         )
         QTimer.singleShot(
-            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.update_points
+            (self.draw_time_limit + self.answer_time_limit + 1) * 1000,
+            self.update_points,
         )
         # turn 2 after changing player roles
         QTimer.singleShot(
