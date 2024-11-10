@@ -11,8 +11,8 @@ import csv
 import random
 import sys
 
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtGui import QAction, QIcon, QPainter, QPen, QPixmap
+from PyQt6.QtCore import QPoint, Qt, QTimer
+from PyQt6.QtGui import QAction, QIcon, QPainter, QPen, QPixmap, QPalette, QColor
 from PyQt6.QtWidgets import (
     QApplication,
     QDockWidget,
@@ -29,6 +29,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QFormLayout,
     QDialogButtonBox,
+    QGridLayout,
+    QLineEdit,
 )
 
 
@@ -55,8 +57,6 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.setWindowIcon(
             QIcon("./icons/paint-brush.png")
         )  # documentation: https://doc.qt.io/qt-6/qwidget.html#windowIcon-prop
-        # mac version - not yet working
-        # self.setWindowIcon(QIcon(QPixmap("./icons/paint-brush.png")))
 
         # image settings (default)
         self.image = QPixmap(
@@ -69,6 +69,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         mainWidget.setMaximumWidth(300)
 
         # draw settings (default)
+        self.allowDrawing = True  # usefull for when the game started
         self.drawing = False
         self.brushSize = 3
         self.brushColor = (
@@ -79,9 +80,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.lastPoint = QPoint()  # documentation: https://doc.qt.io/qt-6/qpoint.html
 
         # Initialize default game settings
-        self.time_limit = 60  # Default time in seconds
+        self.draw_time_limit = 60  # Default draw time in seconds
+        self.answer_time_limit = 30  # Default answer time in seconds
         self.rounds = 5  # Default number of rounds
         self.difficulty = "easy"  # Default word list difficulty
+
+        # Init the score and round
+        self.score = [0, 0]
+        self.round = 0
 
         # set up menus
         mainMenu = self.menuBar()  # create a menu bar
@@ -229,26 +235,49 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         playerInfo = QWidget()
         self.vbdock = QVBoxLayout()
         playerInfo.setLayout(self.vbdock)
-        playerInfo.setMaximumSize(160, self.height())
+        playerInfo.setMaximumSize(150, self.height())
         # add controls to custom widget
-        self.vbdock.addWidget(QLabel("Current Turn: -"))
+        # init label
+        self.turn_label = QLabel("Current Turn: -")
+        self.round_label = QLabel("Current Round: -")
+        self.player1_label = QLabel("Player 1: -")
+        self.player2_label = QLabel("Player 2: -")
+        self.timer_label = QLabel("Time Left: -")
+
+        self.vbdock.addWidget(self.round_label)
+        self.vbdock.addWidget(self.turn_label)
         self.vbdock.addSpacing(20)
         self.vbdock.addWidget(QLabel("Scores:"))
-        self.vbdock.addWidget(QLabel("Player 1: -"))
-        self.vbdock.addWidget(QLabel("Player 2: -"))
+        self.vbdock.addWidget(self.player1_label)
+        self.vbdock.addWidget(self.player2_label)
+        self.vbdock.addSpacing(20)
+        self.vbdock.addWidget(QLabel("Timer:"))
+        self.vbdock.addWidget(self.timer_label)
+
         self.vbdock.addStretch(1)
 
         # create the starting button
         start_button = QPushButton("Start")
-        start_button.clicked.connect(self.start_game)
+        start_button.clicked.connect(self.play)
 
         self.vbdock.addWidget(start_button)
 
-        # Setting colour of dock to gray
+        # Determine the current theme background color
+        bg_color = self.palette().color(QPalette.ColorRole.Window)
+
+        # Check if the theme color is "light" (i.e., if it's close to white)
+        is_light_theme = (
+            bg_color.lightness() > 180
+        )  # Lightness threshold for 'light' theme
+
+        # Set to gray if theme is light, otherwise use theme's background color
+        dock_bg_color = QColor("#D3D3D3") if is_light_theme else bg_color
+
+        # Update the dock's background color
         playerInfo.setAutoFillBackground(True)
-        p = playerInfo.palette()
-        p.setColor(playerInfo.backgroundRole(), Qt.GlobalColor.gray)
-        playerInfo.setPalette(p)
+        palette = playerInfo.palette()
+        palette.setColor(QPalette.ColorRole.Window, dock_bg_color)
+        playerInfo.setPalette(palette)
 
         # set widget for dock
         self.dockInfo.setWidget(playerInfo)
@@ -256,6 +285,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # Initialize the current word list
         self.getList(self.difficulty)
         self.currentWord = self.getWord()
+
+        # init timer
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_timer)
 
     # event handlers
     def mousePressEvent(
@@ -273,7 +306,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def mouseMoveEvent(
         self, event
     ):  # when the mouse is moved, documenation: documentation: https://doc.qt.io/qt-6/qwidget.html#mouseMoveEvent
-        if self.drawing:
+        if self.drawing & self.allowDrawing:
             painter = QPainter(
                 self.image
             )  # object which allows drawing to take place on an image
@@ -425,9 +458,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         dialog.setWindowTitle("Game Settings")
 
         # Time limit (seconds per round)
-        time_spinbox = QSpinBox()
-        time_spinbox.setRange(10, 300)
-        time_spinbox.setValue(self.time_limit)
+        draw_time_spinbox = QSpinBox()
+        draw_time_spinbox.setRange(0, 300)
+        draw_time_spinbox.setValue(self.draw_time_limit)
+        answer_time_spinbox = QSpinBox()
+        answer_time_spinbox.setRange(0, 300)
+        answer_time_spinbox.setValue(self.answer_time_limit)
 
         # Number of rounds
         rounds_spinbox = QSpinBox()
@@ -441,7 +477,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # Layout for settings dialog
         form_layout = QFormLayout()
-        form_layout.addRow("Time per round (s):", time_spinbox)
+        form_layout.addRow("Time to draw per round (s):", draw_time_spinbox)
+        form_layout.addRow("Time to answer per round (s):", answer_time_spinbox)
         form_layout.addRow("Number of rounds:", rounds_spinbox)
         form_layout.addRow("Difficulty:", difficulty_combo)
 
@@ -458,25 +495,267 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # Show dialog and update settings if accepted
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.time_limit = time_spinbox.value()
+            self.answer_time_limit = answer_time_spinbox.value()
+            self.draw_time_limit = draw_time_spinbox.value()
             self.rounds = rounds_spinbox.value()
             self.difficulty = difficulty_combo.currentText()
-            self.update_game_settings()
-
-    def update_game_settings(self):
-        # Update logic for game settings (e.g., timer, number of rounds, difficulty)
-        print(
-            f"Settings Updated - Time per Round: {self.time_limit} sec, Rounds: {self.rounds}, Difficulty: {self.difficulty}"
-        )
-
-    def start_game(self):
-        pass
+            self.getList(self.difficulty)
+            self.currentWord = self.getWord()
 
     def show_word(self):
-        pass
+        # Create a dialog to show the current word
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Round {self.round}")
+
+        # Set the size of the dialog
+        dialog.setFixedSize(300, 150)
+
+        # Create a grid layout for the dialog
+        grid_layout = QGridLayout(dialog)
+
+        # Display player turn (centered)
+        turn = QLabel(f"Player {self.draw_turn + 1} turn to draw")
+        turn.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(turn, 0, 0, 1, 2)
+
+        # Create button to show the word
+        button = QPushButton("Show word")
+        button.setStyleSheet("text-align: center;")
+        word = QLabel(f"The word is: {self.currentWord}")
+        word.setVisible(False)
+
+        # Toggle word visibility when button is clicked
+        button.clicked.connect(lambda: word.setVisible(not word.isVisible()))
+        grid_layout.addWidget(button, 1, 0)
+
+        # Separation line (centered)
+        separation = QLabel(f"------------------------------------------")
+        separation.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(separation, 2, 0, 1, 2)
+
+        # The word label (centered)
+        word.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(word, 3, 0, 1, 2)
+
+        # Create Close button (placed next to "Show word" button)
+        close_button = QPushButton("Ok")
+        close_button.setStyleSheet("text-align: center;")
+        close_button.clicked.connect(dialog.accept)
+
+        # Add the Close button to the grid layout
+        grid_layout.addWidget(close_button, 1, 1)
+
+        # Set margins and spacing for the grid layout
+        grid_layout.setContentsMargins(10, 10, 10, 10)
+        grid_layout.setSpacing(10)
+
+        # Set a timer to automatically close the dialog after a limit time
+        drawing_timer = QTimer(self)
+        drawing_timer.setSingleShot(True)  # Run only once
+        drawing_timer.timeout.connect(
+            dialog.accept
+        )  # Close the dialog when the timer ends
+        drawing_timer.start(self.draw_time_limit * 1000)  # Set drawing time limit
+
+        # Show the dialog
+        dialog.show()
+
+    def answer_window(self):
+        # Create a dialog for answering the word
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Round {self.round} - Answer")
+
+        # Set the size of the dialog
+        dialog.setFixedSize(300, 200)
+
+        # Create a grid layout for the dialog
+        grid_layout = QGridLayout(dialog)
+
+        # Display player turn (centered)
+        turn = QLabel(f"Player {self.answer_turn + 1} turn to answer")
+        turn.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(turn, 0, 0, 1, 2)
+
+        # Label asking for the answer (centered)
+        answer_prompt = QLabel("Enter your answer:")
+        answer_prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(answer_prompt, 1, 0, 1, 2)
+
+        # Text field for answer input
+        answer_input = QLineEdit()
+        answer_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        grid_layout.addWidget(answer_input, 2, 0, 1, 2)
+
+        # Create a button to submit the answer
+        submit_button = QPushButton("Submit Answer")
+        submit_button.setStyleSheet("text-align: center;")
+        submit_button.clicked.connect(lambda: self.submit_answer(answer_input.text()))
+        grid_layout.addWidget(submit_button, 4, 0, 1, 2)
+
+        # Set margins and spacing for the grid layout
+        grid_layout.setContentsMargins(10, 10, 10, 10)
+        grid_layout.setSpacing(10)
+
+        # Set a timer to automatically close the dialog after a limit time
+        answer_timer = QTimer(self)
+        answer_timer.setSingleShot(True)  # Run only once
+        answer_timer.timeout.connect(
+            dialog.accept
+        )  # Close the dialog when the timer ends
+        answer_timer.start(self.answer_time_limit * 1000)  # Set answering time limit
+
+        # Show the dialog
+        dialog.show()
+
+    def submit_answer(self, answer):
+        # Logic to handle the submitted answer
+        if answer.lower() == self.currentWord.lower():
+            QMessageBox.information(self, "Correct!", "You guessed the word!")
+            self.score[self.answer_turn] += 1
+        else:
+            QMessageBox.warning(self, "Incorrect", "Try again!")
 
     def update_points(self):
-        pass
+        self.turn_label.setText(f"Current Turn: {self.draw_turn + 1}")
+        self.round_label.setText(f"Current Round: {self.round}")
+        self.player1_label.setText(f"Player 1: {self.score[0]}")
+        self.player2_label.setText(f"Player 2: {self.score[1]}")
+
+    def turn(self):
+        # clear the canvas
+        self.clear()
+
+        # Get a new word for the turn
+        self.currentWord = self.getWord()
+
+        # permit drawing
+        self.allowDrawing = True
+
+        # start timer and show word
+        self.start_timer(self.draw_time_limit)
+        self.show_word()
+
+        # do not permit drawing after time ended
+        self.allowDrawing = False
+
+        # start timer and show answer window
+        self.start_timer(self.answer_time_limit)
+        self.answer_window()
+
+    def start_timer(self, seconds):
+        # Initialize the timer for a new turn
+        self.time_left = seconds
+        self.update_timer_display()
+        self.timer.start(1000)  # Update every 1000 ms = 1 second
+
+    def update_timer(self):
+        if self.time_left > 0:
+            self.time_left -= 1
+            self.update_timer_display()
+        else:
+            self.timer.stop()
+            self.timer_label.setText("Time's up!")
+
+    def reset_timer(self):
+        self.timer_label.setText(f"Time Left: -")
+
+    def update_timer_display(self):
+        # Display the time in MM:SS format
+        minutes = self.time_left // 60
+        seconds = self.time_left % 60
+        self.timer_label.setText(f"Time Left: {minutes:02}:{seconds:02}")
+
+    def reset_points(self):
+        self.turn_label.setText("Current Turn: -")
+        self.round_label.setText("Current Round: -")
+        self.player1_label.setText("Player 1: -")
+        self.player2_label.setText("Player 2: -")
+
+    def whoIsWinning(self):
+        """
+        Create a new window to show the results of the game
+        """
+
+        # Determine the winner based on scores
+        if self.score[0] > self.score[1]:
+            winner_text = "Player 1 wins!"
+        elif self.score[1] > self.score[0]:
+            winner_text = "Player 2 wins!"
+        else:
+            winner_text = "It's a tie!"
+
+        # Create a dialog to display the winner
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Game Over")
+
+        # Set dialog size
+        dialog.setFixedSize(250, 150)
+
+        # Create a vertical layout for the dialog
+        layout = QVBoxLayout(dialog)
+
+        # Winner label
+        winner_label = QLabel(winner_text)
+        winner_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(winner_label)
+
+        # Display the final scores
+        score_label = QLabel(f"Final Scores:\nPlayer 1: {self.score[0]}\nPlayer 2: {self.score[1]}")
+        score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(score_label)
+
+        # Close button
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+
+        # Show the dialog
+        dialog.show()
+
+    def play(self):
+        # Confirm starting a new game
+        reply = QMessageBox.question(
+            self,
+            "Start Game",
+            "Are you ready to start the game?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+
+            # setting the drawing state to false
+            self.allowDrawing = False
+
+            # Reset scores and start a new game
+            self.score = [0, 0]
+            self.round = 1
+            self.draw_turn = 0
+            self.answer_turn = 1
+            self.update_points()
+
+            while self.round <= self.rounds:
+
+                # do a turn
+                self.turn()
+
+                # swap turn and update
+                self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
+                self.update_points()
+
+                # do another turn
+                self.turn()
+
+                # swap turn, increase round and update
+                self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
+                self.round += 1
+                self.update_points()
+
+            self.timer.stop()
+            self.reset_timer()
+            self.reset_points()
+            self.whoIsWinning()
+            self.allowDrawing = True
+        else:
+            QMessageBox.information(self, "Game", "Game start cancelled.")
 
 
 # this code will be executed if it is the main module but not if the module is imported
