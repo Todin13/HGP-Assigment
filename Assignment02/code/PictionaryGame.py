@@ -72,9 +72,13 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.allowDrawing = True  # usefull for when the game started
         self.drawing = False
         self.brushSize = 3
+        self.brushStyle = Qt.PenStyle.SolidLine
+        self.capStyle = Qt.PenCapStyle.RoundCap
+        self.joinStyle = Qt.PenJoinStyle.RoundJoin
         self.brushColor = (
             Qt.GlobalColor.black
         )  # documentation: https://doc.qt.io/qt-6/qt.html#GlobalColor-enum
+        self.isEraserActive = False  # Track if the eraser is active
 
         # reference to last point recorded by mouse
         self.lastPoint = QPoint()  # documentation: https://doc.qt.io/qt-6/qpoint.html
@@ -95,13 +99,26 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         fileMenu = mainMenu.addMenu(
             " File "
         )  # add the file menu to the menu bar, the space is required as "File" is reserved in Mac
+        
+        # Add Eraser option
+        eraserAction = QAction(QIcon("./icons/eraser.png"), "Eraser", self)
+        eraserAction.setShortcut("Ctrl+E")
+        mainMenu.addAction(eraserAction)
+        eraserAction.triggered.connect(self.activateEraser)
+
+        # Restore Brush option
+        restoreBrushAction = QAction(QIcon("./icons/brush.png"), "Restore Brush", self)
+        restoreBrushAction.setShortcut("Ctrl+R")
+        mainMenu.addAction(restoreBrushAction)
+        restoreBrushAction.triggered.connect(self.restoreBrush)
+
         brushSizeMenu = mainMenu.addMenu(
             " Brush Size "
         )  # add the "Brush Size" menu to the menu bar
         brushColorMenu = mainMenu.addMenu(
             " Brush Colour "
-        )  # add the "Brush Colour" menu to the menu bar
-
+        )  # add the "Brush Colour" menu to the menu barself.capStyle, self.joinStyle
+        brushStyleMenu = mainMenu.addMenu(" Brush Style ") # adding brush style menu
         game_setting_menu = mainMenu.addAction(
             " Game Setting "
         )  # add " Game Setting" menu to the menu bar
@@ -162,7 +179,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         clearAction.triggered.connect(
             self.clear
         )  # when the menu option is selected or the shortcut is used the clear slot is triggered
-
+        
         # open
         openAction = QAction(
             QIcon("./icons/folder.png"), "Open", self
@@ -226,6 +243,47 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         colorPickerAction.setShortcut("Ctrl+P")
         brushColorMenu.addAction(colorPickerAction)
         colorPickerAction.triggered.connect(self.openColorPicker)
+
+        lineStyleMenu = brushStyleMenu.addMenu(" Line Style ") # add the Brush Style menu
+        capStyleMenu = brushStyleMenu.addMenu(" Cap Style ") # add the Cap Style menu
+        joinStyleMenu = brushStyleMenu.addMenu(" Join Style ") # add the Join Style menu
+
+        # Brush style
+        solidAction = QAction("Solid", self)
+        solidAction.triggered.connect(self.setSolidStyle)
+        lineStyleMenu.addAction(solidAction)
+
+        dashedAction = QAction("Dashed", self)
+        dashedAction.triggered.connect(self.setDashedStyle)
+        lineStyleMenu.addAction(dashedAction)
+
+        dottedAction = QAction("Dotted", self)
+        dottedAction.triggered.connect(self.setDottedStyle)
+        lineStyleMenu.addAction(dottedAction)
+
+        roundCapAction = QAction("Round Cap", self)
+        roundCapAction.triggered.connect(self.setRoundCap)
+        capStyleMenu.addAction(roundCapAction)
+
+        squareCapAction = QAction("Square Cap", self)
+        squareCapAction.triggered.connect(self.setSquareCap)
+        capStyleMenu.addAction(squareCapAction)
+
+        flatCapAction = QAction("Flat Cap", self)
+        flatCapAction.triggered.connect(self.setFlatCap)
+        capStyleMenu.addAction(flatCapAction)
+
+        roundJoinAction = QAction("Round Join", self)
+        roundJoinAction.triggered.connect(self.setRoundJoin)
+        joinStyleMenu.addAction(roundJoinAction)
+
+        bevelJoinAction = QAction("Bevel Join", self)
+        bevelJoinAction.triggered.connect(self.setBevelJoin)
+        joinStyleMenu.addAction(bevelJoinAction)
+
+        miterJoinAction = QAction("Miter Join", self)
+        miterJoinAction.triggered.connect(self.setMiterJoin)
+        joinStyleMenu.addAction(miterJoinAction)
 
         # Side Dock
         self.dockInfo = QDockWidget()
@@ -307,19 +365,20 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self, event
     ):  # when the mouse is moved, documenation: documentation: https://doc.qt.io/qt-6/qwidget.html#mouseMoveEvent
         if self.drawing & self.allowDrawing:
+
             painter = QPainter(
                 self.image
             )  # object which allows drawing to take place on an image
             # allows the selection of brush colour, brish size, line type, cap type, join type. Images available here http://doc.qt.io/qt-6/qpen.html
-            painter.setPen(
-                QPen(
-                    self.brushColor,
-                    self.brushSize,
-                    Qt.PenStyle.SolidLine,
-                    Qt.PenCapStyle.RoundCap,
-                    Qt.PenJoinStyle.RoundJoin,
-                )
-            )
+            
+             # Set eraser mode if eraser is active
+            if self.isEraserActive:
+                # Eraser mode
+                painter.setPen(QPen(Qt.GlobalColor.white, self.brushSize, Qt.PenStyle.SolidLine))
+            else:
+                # Normal drawing mode
+                painter.setPen(QPen(self.brushColor, self.brushSize, self.brushStyle, self.capStyle, self.joinStyle))
+
             painter.drawLine(
                 self.lastPoint, event.pos()
             )  # draw a line from the point of the orginal press to the point to where the mouse was dragged to
@@ -370,6 +429,44 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         Change the brush color to the selected color from QColorDialog.
         """
         self.brushColor = color
+
+    # Functions to change brush style
+    def setSolidStyle(self):
+        self.brushStyle = Qt.PenStyle.SolidLine
+
+    def setDashedStyle(self):
+        self.brushStyle = Qt.PenStyle.DashLine
+
+    def setDottedStyle(self):
+        self.brushStyle = Qt.PenStyle.DotLine
+
+    # Functions to set Cap Styles
+    def setRoundCap(self):
+        self.capStyle = Qt.PenCapStyle.RoundCap
+
+    def setSquareCap(self):
+        self.capStyle = Qt.PenCapStyle.SquareCap
+
+    def setFlatCap(self):
+        self.capStyle = Qt.PenCapStyle.FlatCap
+
+    # Functions to set Join Styles
+    def setRoundJoin(self):
+        self.joinStyle = Qt.PenJoinStyle.RoundJoin
+
+    def setBevelJoin(self):
+        self.joinStyle = Qt.PenJoinStyle.BevelJoin
+    
+    def setMiterJoin(self):
+        self.joinStyle = Qt.PenJoinStyle.MiterJoin
+
+    # Function to activate the eraser
+    def activateEraser(self):
+        self.isEraserActive = True
+
+    # Function to activate brush
+    def restoreBrush(self):
+        self.isEraserActive = False
 
     # slots
     def save(self):
