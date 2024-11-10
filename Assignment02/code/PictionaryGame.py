@@ -308,10 +308,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockInfo)
 
         # widget inside the Dock
-        playerInfo = QWidget()
+        self.playerInfo = QWidget()
         self.vbdock = QVBoxLayout()
-        playerInfo.setLayout(self.vbdock)
-        playerInfo.setMaximumSize(150, self.height())
+        self.playerInfo.setLayout(self.vbdock)
+        self.playerInfo.setMaximumSize(150, self.height())
         # add controls to custom widget
         # init label
         self.turn_label = QLabel("Current Turn: -")
@@ -350,13 +350,13 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         dock_bg_color = QColor("#D3D3D3") if is_light_theme else bg_color
 
         # Update the dock's background color
-        playerInfo.setAutoFillBackground(True)
-        palette = playerInfo.palette()
+        self.playerInfo.setAutoFillBackground(True)
+        palette = self.playerInfo.palette()
         palette.setColor(QPalette.ColorRole.Window, dock_bg_color)
-        playerInfo.setPalette(palette)
+        self.playerInfo.setPalette(palette)
 
         # set widget for dock
-        self.dockInfo.setWidget(playerInfo)
+        self.dockInfo.setWidget(self.playerInfo)
         self.dockInfo.setAutoFillBackground(True)
 
         # Initialize the current word list
@@ -437,6 +437,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     # resize event - this function is called
     def resizeEvent(self, event):
         self.image = self.image.scaled(self.width(), self.height())
+        self.playerInfo.setMaximumSize(150, self.height())
+        super().resizeEvent(event)
 
     def helpMessageBox(self):
         """
@@ -504,7 +506,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         )
         if filePath == "":  # if the file path is empty
             return  # do nothing and return
-        self.image.save(filePath)  # save file image to the file path
+        end = ".png" if filePath[:-4] != ".png" else ""
+        self.image.save(filePath + end)  # save file image to the file path
 
     def clear(self):
         self.image.fill(
@@ -620,7 +623,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         layout.addWidget(button_box)
 
         # Show dialog and update settings if accepted
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if dialog.show() == QDialog.DialogCode.Accepted:
             self.answer_time_limit = answer_time_spinbox.value()
             self.draw_time_limit = draw_time_spinbox.value()
             self.rounds = rounds_spinbox.value()
