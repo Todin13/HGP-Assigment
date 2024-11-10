@@ -80,14 +80,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.lastPoint = QPoint()  # documentation: https://doc.qt.io/qt-6/qpoint.html
 
         # Initialize default game settings
-        self.draw_time_limit = 60  # Default draw time in seconds
-        self.answer_time_limit = 30  # Default answer time in seconds
+        self.draw_time_limit = 30  # Default draw time in seconds
+        self.answer_time_limit = 10  # Default answer time in seconds
         self.rounds = 5  # Default number of rounds
         self.difficulty = "easy"  # Default word list difficulty
 
         # Init the score and round
         self.score = [0, 0]
-        self.round = 0
+        self.round_id = 0
 
         # set up menus
         mainMenu = self.menuBar()  # create a menu bar
@@ -505,7 +505,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def show_word(self):
         # Create a dialog to show the current word
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"Round {self.round}")
+        dialog.setWindowTitle(f"Round {self.round_id}")
 
         # Set the size of the dialog
         dialog.setFixedSize(300, 150)
@@ -563,7 +563,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def answer_window(self):
         # Create a dialog for answering the word
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"Round {self.round} - Answer")
+        dialog.setWindowTitle(f"Round {self.round_id} - Answer")
 
         # Set the size of the dialog
         dialog.setFixedSize(300, 200)
@@ -589,7 +589,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # Create a button to submit the answer
         submit_button = QPushButton("Submit Answer")
         submit_button.setStyleSheet("text-align: center;")
-        submit_button.clicked.connect(lambda: self.submit_answer(answer_input.text()))
+        submit_button.clicked.connect(lambda: self.submit_answer(answer_input.text(), dialog))
         grid_layout.addWidget(submit_button, 4, 0, 1, 2)
 
         # Set margins and spacing for the grid layout
@@ -607,40 +607,20 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # Show the dialog
         dialog.show()
 
-    def submit_answer(self, answer):
+    def submit_answer(self, answer, dialog):
         # Logic to handle the submitted answer
         if answer.lower() == self.currentWord.lower():
             QMessageBox.information(self, "Correct!", "You guessed the word!")
             self.score[self.answer_turn] += 1
+            dialog.accept()
         else:
             QMessageBox.warning(self, "Incorrect", "Try again!")
 
     def update_points(self):
         self.turn_label.setText(f"Current Turn: {self.draw_turn + 1}")
-        self.round_label.setText(f"Current Round: {self.round}")
+        self.round_label.setText(f"Current Round: {self.round_id}")
         self.player1_label.setText(f"Player 1: {self.score[0]}")
         self.player2_label.setText(f"Player 2: {self.score[1]}")
-
-    def turn(self):
-        # clear the canvas
-        self.clear()
-
-        # Get a new word for the turn
-        self.currentWord = self.getWord()
-
-        # permit drawing
-        self.allowDrawing = True
-
-        # start timer and show word
-        self.start_timer(self.draw_time_limit)
-        self.show_word()
-
-        # do not permit drawing after time ended
-        self.allowDrawing = False
-
-        # start timer and show answer window
-        self.start_timer(self.answer_time_limit)
-        self.answer_window()
 
     def start_timer(self, seconds):
         # Initialize the timer for a new turn
@@ -700,7 +680,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         layout.addWidget(winner_label)
 
         # Display the final scores
-        score_label = QLabel(f"Final Scores:\nPlayer 1: {self.score[0]}\nPlayer 2: {self.score[1]}")
+        score_label = QLabel(
+            f"Final Scores:\nPlayer 1: {self.score[0]}\nPlayer 2: {self.score[1]}"
+        )
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(score_label)
 
@@ -711,6 +693,70 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # Show the dialog
         dialog.show()
+
+    def answer(self):
+        # do not permit drawing after time ended
+        self.allowDrawing = False
+
+        # start timer and show answer window
+        self.start_timer(self.answer_time_limit)
+        self.answer_window()
+        QTimer.singleShot(self.answer_time_limit * 1000, self.update_points)
+
+    def turn(self):
+        # clear the canvas
+        self.clear()
+
+        # Get a new word for the turn
+        self.currentWord = self.getWord()
+
+        # permit drawing
+        self.allowDrawing = True
+
+        # start timer and show word
+        self.start_timer(self.draw_time_limit)
+        self.show_word()
+        # show answer window after end of drawing
+        QTimer.singleShot(self.draw_time_limit * 1000, self.answer)
+
+    def swap_turn(self):
+        self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
+
+    def end_round(self):
+        # swap turn and increase round id
+        self.swap_turn()
+        self.round_id += 1
+
+        if self.round_id > self.rounds:
+            self.timer.stop()
+            self.reset_timer()
+            self.reset_points()
+            self.whoIsWinning()
+            self.allowDrawing = True
+        else:
+            self.update()
+            self.round()
+
+    def round(self):
+        # turn 1
+        self.turn()
+
+        # swap turn and update
+        QTimer.singleShot(
+            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.swap_turn
+        )
+        QTimer.singleShot(
+            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.update_points
+        )
+        # turn 2 after changing player roles
+        QTimer.singleShot(
+            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.turn
+        )
+
+        # show next_round window after end of round
+        QTimer.singleShot(
+            (self.draw_time_limit + self.answer_time_limit + 1) * 2000, self.end_round
+        )
 
     def play(self):
         # Confirm starting a new game
@@ -727,33 +773,13 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
             # Reset scores and start a new game
             self.score = [0, 0]
-            self.round = 1
+            self.round_id = 1
             self.draw_turn = 0
             self.answer_turn = 1
             self.update_points()
 
-            while self.round <= self.rounds:
+            self.round()
 
-                # do a turn
-                self.turn()
-
-                # swap turn and update
-                self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
-                self.update_points()
-
-                # do another turn
-                self.turn()
-
-                # swap turn, increase round and update
-                self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
-                self.round += 1
-                self.update_points()
-
-            self.timer.stop()
-            self.reset_timer()
-            self.reset_points()
-            self.whoIsWinning()
-            self.allowDrawing = True
         else:
             QMessageBox.information(self, "Game", "Game start cancelled.")
 
