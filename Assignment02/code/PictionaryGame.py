@@ -357,7 +357,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # set widget for dock
         self.dockInfo.setWidget(self.playerInfo)
-        # self.dockInfo.setAutoFillBackground(True) break all the thing
+        # self.dockInfo.setAutoFillBackground(True) drawing not updated on real time
 
         # Initialize the current word list
         self.getList(self.difficulty)
