@@ -306,7 +306,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"<b>Game Information:</b><br>"
             f"- Players take turns to draw randomly selected words.<br>"
             f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
-            f"- The timer displays the remaining time for each turn.<br>"
+            f"- The timer displays the remaining time for each turn, when it stop you can't draw anymore or can't answer.<br>"
+            f"- Click on the ster button to start the game.<br>"
+            f"- Click on stop to stop at the end of the actual round<br><br>"
             f"<br><i>Enjoy playing!</i>"
         )
 
