@@ -31,6 +31,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QGridLayout,
     QLineEdit,
+    QHBoxLayout
 )
 
 
@@ -219,6 +220,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         brushColorMenu.addAction(yellowAction)
         yellowAction.triggered.connect(self.yellow)
 
+        # adding blue as it's a primmary color
+        blueAction = QAction(QIcon("./icons/blue.png"), "Blue", self)
+        blueAction.setShortcut("Ctrl+U")
+        brushColorMenu.addAction(blueAction)
+        blueAction.triggered.connect(self.blue)
+
         # Action for the color picker to the Brush Colour menu
         colorPickerAction = QAction(
             QIcon("./icons/color-wheel.png"), "Choose Color", self
@@ -294,7 +301,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"<b>Welcome to Pictionary Game!</b><br><br>"
             f"<b>Shortcuts:</b><br>"
             f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
-            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) "
+            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y), Blue (Ctrl+U)"
             f"or choose from the color palette (Ctrl+P).<br>"
             f"- Use the eraser tool: (Ctrl+E) <br>"
             f"- Restore brush after erasing: (Ctrl+R) <br>"
@@ -377,47 +384,43 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.stop_button.clicked.connect(self.stop_action)
         self.vbdock.addWidget(self.stop_button) 
 
-        # Determine the current theme background color
-        bg_color = self.palette().color(QPalette.ColorRole.Window)
-
-        # Check if the theme color is "light" (i.e., if it's close to white)
-        is_light_theme = (
-            bg_color.lightness() > 180
-        )  # Lightness threshold for 'light' theme
-
-        # Set to gray if theme is light, otherwise use theme's background color
-        dock_bg_color = QColor("#D3D3D3") if is_light_theme else bg_color
-
-        # Update the dock's background color
+        # Update the dock's background color by making it gray, and text black 
         self.playerInfo.setAutoFillBackground(True)
         palette = self.playerInfo.palette()
-        palette.setColor(QPalette.ColorRole.Window, dock_bg_color)
-        self.playerInfo.setPalette(palette)
+        palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.gray)
+        palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.black)
+        palette.setColor(QPalette.ColorRole.Button, Qt.GlobalColor.gray)
+        palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.black)
 
-        # set widget for dock
+        # Setting the palette to the element were there is text
+        self.playerInfo.setPalette(palette)
+        self.dockInfo.setPalette(palette)
+        mainMenu.setPalette(palette) 
+
+        # Set widget for dock
         self.dockInfo.setWidget(self.playerInfo)
-        # self.dockInfo.setAutoFillBackground(True) drawing not updated on real time
+        # Self.dockInfo.setAutoFillBackground(True) # drawing not updated on real time need to open another children window and close it
 
         # Initialize the current word list
         self.getList(self.difficulty)
         self.currentWord = self.getWord()
 
-        # init timer
+        # Init timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_timer)
 
-    # event handlers
+    # Event handlers
     def mousePressEvent(
         self, event
-    ):  # when the mouse is pressed, documentation: https://doc.qt.io/qt-6/qwidget.html#mousePressEvent
+    ):  # When the mouse is pressed, documentation: https://doc.qt.io/qt-6/qwidget.html#mousePressEvent
         if (
             event.button() == Qt.MouseButton.LeftButton
-        ):  # if the pressed button is the left button
-            self.drawing = True  # enter drawing mode
+        ):  # If the pressed button is the left button
+            self.drawing = True  # Enter drawing mode
             self.lastPoint = (
                 event.pos()
-            )  # save the location of the mouse press as the lastPoint
-            print(self.lastPoint)  # print the lastPoint for debugging purposes
+            )  # Save the location of the mouse press as the lastPoint
+            print(self.lastPoint)  # Print the lastPoint for debugging purposes
 
     def mouseMoveEvent(
         self, event
@@ -577,6 +580,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
     def yellow(self):
         self.brushColor = Qt.GlobalColor.yellow
+
+    def blue(self):
+        self.brushColor = Qt.GlobalColor.blue
 
     # Get a random word from the list read from file
     def getWord(self):
