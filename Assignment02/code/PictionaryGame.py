@@ -125,48 +125,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             " Game Setting "
         )  # add " Game Setting" menu to the menu bar
 
-        helpButton = mainMenu.addAction(
+        helpMenu = mainMenu.addMenu(
             " ? "
-        )  # adding help button to menu bar adding space as it's the style of the bar
+        )  # adding help menu to menu bar adding space as it's the style of the bar
 
         # Connecting the button game setting to the setting window
         game_setting_menu.triggered.connect(self.update_game_setting)
-
-        # help button action
-        self.helpMessage = (
-            f"<b>Welcome to Pictionary Game!</b><br><br>"
-            f"<b>Instructions:</b><br>"
-            f"- Use the left mouse button to draw on the canvas.<br>"
-            f"- Use the eraser (Ctrl+E) to erase parts of your drawing.<br>"
-            f"- Select brush size, style, and color from the menu.<br>"
-            f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
-            f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br>"
-            f"- Open a new canvas by selecting 'Open' (Ctrl+O).<br>"
-            f"- Start the game by clicing on the start button on bottom right.<br><br>"
-            f"<b>Shortcuts:</b><br>"
-            f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
-            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) "
-            f"or choose from the color palette (Ctrl+P).<br>"
-            f"- Select brush style: Solid, Dashed, or Dotted.<br>"
-            f"- Set brush cap style: Round, Square, or Flat.<br>"
-            f"- Set brush join style: Round, Bevel, or Miter.<br>"
-            f"- Use the eraser tool: (Ctrl+E) <br>"
-            f"- Restore brush after erasing: (Ctrl+R) <br>"
-            f"- Clear the canvas: (Ctrl+C) <br>"
-            f"- Save the canvas: (Ctrl+S) <br><br>"
-            f"<b>Game Settings:</b><br>"
-            f"- Customize game settings in the 'Game Setting' menu.<br>"
-            f"- Default settings: 30 seconds for drawing, 10 seconds for guessing, "
-            f"5 rounds, and 'Easy' difficulty.<br><br>"
-            f"<b>Game Information:</b><br>"
-            f"- Players take turns to draw randomly selected words.<br>"
-            f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
-            f"- The timer displays the remaining time for each turn.<br>"
-            f"<br><i>Enjoy playing!</i>"
-        )  # Define help text
-        helpButton.triggered.connect(
-            self.helpMessageBox
-        )  # Connecting to the help message pop up window when click on " help" button
 
         # save menu item
         saveAction = QAction(
@@ -303,7 +267,66 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         miterJoinAction.triggered.connect(self.setMiterJoin)
         joinStyleMenu.addAction(miterJoinAction)
 
-        # Side Dock
+        # Help menu
+        # help menu buttons action
+        # Define help text
+        helpMessageAbout = (
+            f"<b>Welcome to Pictionary Game!</b><br><br>"
+            f"<b>Instructions:</b><br>"
+            f"- Use the left mouse button to draw on the canvas.<br>"
+            f"- Use the eraser (Ctrl+E) to erase parts of your drawing.<br>"
+            f"- Select brush size, style, and color from the menu.<br>"
+            f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
+            f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br>"
+            f"- Open a new canvas by selecting 'Open' (Ctrl+O).<br>"
+            f"- Customize game settings in the 'Game Setting' menu.<br>"
+            f"- Start the game by clicing on the start button on bottom right.<br>"
+            f"- You can stop the game by clicking on the stop button, the game will stop at the end of the round.<br><br>"
+            f"<br><i>Enjoy playing!</i>"
+        )
+
+        helpMessageShortcut = (
+            f"<b>Welcome to Pictionary Game!</b><br><br>"
+            f"<b>Shortcuts:</b><br>"
+            f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
+            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y) "
+            f"or choose from the color palette (Ctrl+P).<br>"
+            f"- Use the eraser tool: (Ctrl+E) <br>"
+            f"- Restore brush after erasing: (Ctrl+R) <br>"
+            f"- Clear the canvas: (Ctrl+C) <br>"
+            f"- Save the canvas: (Ctrl+S) <br><br>"
+            f"<br><i>Enjoy playing!</i>"
+        )
+
+        helpMessageGame = (
+            f"<b>Welcome to Pictionary Game!</b><br><br>"
+            f"<b>Game Settings:</b><br>"
+            f"- Customize game settings in the 'Game Setting' menu.<br>"
+            f"- Default settings: 30 seconds for drawing, 10 seconds for guessing, 5 rounds, and 'Easy' difficulty.<br><br>"
+            f"<b>Game Information:</b><br>"
+            f"- Players take turns to draw randomly selected words.<br>"
+            f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
+            f"- The timer displays the remaining time for each turn.<br>"
+            f"<br><i>Enjoy playing!</i>"
+        )
+
+        # add about button to help menu
+        helpaboutButton = QAction(" About ", self)
+        helpaboutButton.triggered.connect(lambda: self.helpMessageBox(" About ", helpMessageAbout))
+        helpMenu.addAction(helpaboutButton)
+
+        # add Shortcuts button to help menu
+        helpShortcutButton = QAction(" Shortcuts ", self)
+        helpShortcutButton.triggered.connect(lambda:self.helpMessageBox(" Shortcuts ", helpMessageShortcut))
+        helpMenu.addAction(helpShortcutButton)
+
+        # add game info button to help menu
+        helpGameButton = QAction(" Game Info ", self)
+        helpGameButton.triggered.connect(lambda:self.helpMessageBox(" Game Info ", helpMessageGame))
+        helpMenu.addAction(helpGameButton)
+        
+
+        # Side Dock, putting the dock and playInfo into class property to modify the label of playerInfo and modify the dockInfo size when resizing the image
         self.dockInfo = QDockWidget()
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockInfo)
 
@@ -440,11 +463,11 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.playerInfo.setMaximumSize(150, self.height())
         super().resizeEvent(event)
 
-    def helpMessageBox(self):
+    def helpMessageBox(self, about, message):
         """
         Creating the Help message pop up window
         """
-        QMessageBox.information(self, " Help", self.helpMessage)
+        QMessageBox.information(self, about, message)
 
     def openColorPicker(self):
         """
@@ -601,7 +624,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         # Difficulty level
         difficulty_combo = QComboBox()
-        difficulty_combo.addItems(["easy", "medium", "hard"])
+        difficulty_combo.addItems(["easy", "hard"])
         difficulty_combo.setCurrentText(self.difficulty)
 
         # Layout for settings dialog
