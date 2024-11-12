@@ -776,7 +776,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # Logic to handle the submitted answer
         if answer.lower() == self.currentWord.lower():
             QMessageBox.information(self, "Correct!", "You guessed the word!")
+            # add two point to the drawer and one to the finder
             self.score[self.answer_turn] += 1
+            self.score[self.draw_turn] += 2
             dialog.accept()
         else:
             QMessageBox.warning(self, "Incorrect", "Try again!")
