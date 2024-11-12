@@ -68,6 +68,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         mainWidget = QWidget()
         mainWidget.setMaximumWidth(300)
 
+        # init game state
+        self.game = False
+
         # draw settings (default)
         self.allowDrawing = True  # usefull for when the game started
         self.drawing = False
@@ -308,7 +311,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
             f"- The timer displays the remaining time for each turn, when it stop you can't draw anymore or can't answer.<br>"
             f"- Click on the ster button to start the game.<br>"
-            f"- Click on stop to stop at the end of the actual round<br><br>"
+            f"- Click on stop to stop at the end of the actual round.<br><br>"
             f"<br><i>Enjoy playing!</i>"
         )
 
@@ -889,11 +892,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.round_id += 1
 
         if self.round_id > self.rounds:
+            # stopping timer and reseting the game state info
             self.timer.stop()
             self.reset_timer()
             self.reset_points()
             self.whoIsWinning()
+            # allowing drawing and removing the game state
             self.allowDrawing = True
+            self.game = False
         else:
             self.update()
             self.round()
@@ -921,44 +927,54 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         )
 
     def play(self):
-        # Confirm starting a new game
-        reply = QMessageBox.question(
-            self,
-            "Start Game",
-            "Are you ready to start the game?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if reply == QMessageBox.StandardButton.Yes:
 
-            # setting the drawing state to false
-            self.allowDrawing = False
-
-            # Reset scores and start a new game
-            self.score = [0, 0]
-            self.round_id = 1
-            self.draw_turn = 0
-            self.answer_turn = 1
-            self.update_points()
-
-            self.round()
+        if self.game:
+            QMessageBox.information(self, " Start Game ", "There is an ongoing game stop it to start a new one. ")
 
         else:
-            QMessageBox.information(self, "Game", "Game start cancelled.")
+            # Confirm starting a new game
+            reply = QMessageBox.question(
+                self,
+                "Start Game",
+                "Are you ready to start the game?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+
+                # setting game state to true
+                self.game = True
+
+                # setting the drawing state to false
+                self.allowDrawing = False
+
+                # Reset scores and start a new game
+                self.score = [0, 0]
+                self.round_id = 1
+                self.draw_turn = 0
+                self.answer_turn = 1
+                self.update_points()
+
+                self.round()
+
+            else:
+                QMessageBox.information(self, "Game", "Game start cancelled.")
 
     def stop_action(self):
-    # Show confirmation dialog
-        reply = QMessageBox.question(
-            self,
-            "Confirm Stop",
-            "Are you sure you want to stop the game at the end of this round?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
+        # Show confirmation dialog
+        if self.game:
+            reply = QMessageBox.question(
+                self,
+                "Confirm Stop",
+                "Are you sure you want to stop the game at the end of this round?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
 
-        # If the user clicks "Yes", set rounds to current round to stop the game at the end of the round
-        if reply == QMessageBox.StandardButton.Yes:
-            self.rounds = self.round_id
-
+            # If the user clicks "Yes", set rounds to current round to stop the game at the end of the round
+            if reply == QMessageBox.StandardButton.Yes:
+                self.rounds = self.round_id
+        else: 
+            QMessageBox.information(self, " Stop Game ", "There is no ongoing game. ")
 
 # this code will be executed if it is the main module but not if the module is imported
 #  https://stackoverflow.com/questions/419163/what-does-if-name-main-do
