@@ -361,6 +361,11 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         self.vbdock.addWidget(start_button)
 
+        # create the stop button
+        self.stop_button = QPushButton("Stop", self)
+        self.stop_button.clicked.connect(self.stop_action)
+        self.vbdock.addWidget(self.stop_button) 
+
         # Determine the current theme background color
         bg_color = self.palette().color(QPalette.ColorRole.Window)
 
@@ -937,6 +942,20 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
         else:
             QMessageBox.information(self, "Game", "Game start cancelled.")
+
+    def stop_action(self):
+    # Show confirmation dialog
+        reply = QMessageBox.question(
+            self,
+            "Confirm Stop",
+            "Are you sure you want to stop the game at the end of this round?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        # If the user clicks "Yes", set rounds to current round to stop the game at the end of the round
+        if reply == QMessageBox.StandardButton.Yes:
+            self.rounds = self.round_id
 
 
 # this code will be executed if it is the main module but not if the module is imported
