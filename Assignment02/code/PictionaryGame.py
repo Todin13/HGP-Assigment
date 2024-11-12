@@ -68,9 +68,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         mainWidget = QWidget()
         mainWidget.setMaximumWidth(300)
 
-        # init game state and stop state
+        # init game state, stop state and answer state
         self.game = False
         self.stop = False
+        self.answerState = False
 
         # draw settings (default)
         self.allowDrawing = True  # usefull for when the game started
@@ -364,8 +365,12 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # create the starting button
         start_button = QPushButton("Start")
         start_button.clicked.connect(self.play)
-
         self.vbdock.addWidget(start_button)
+
+        # Create the next turn button
+        self.next_turn_button = QPushButton("Next Turn", self)
+        self.next_turn_button.clicked.connect(self.next_turn)
+        self.vbdock.addWidget(self.next_turn_button) 
 
         # create the stop button
         self.stop_button = QPushButton("Stop", self)
@@ -657,7 +662,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         layout.addWidget(button_box)
 
         # Show dialog and update settings if accepted
-        if dialog.show() == QDialog.DialogCode.Accepted:
+        if dialog.exec() == QDialog.DialogCode.Accepted:
             self.answer_time_limit = answer_time_spinbox.value()
             self.draw_time_limit = draw_time_spinbox.value()
             self.rounds = rounds_spinbox.value()
@@ -769,8 +774,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         )  # Close the dialog when the timer ends
         answer_timer.start(self.answer_time_limit * 1000)  # Set answering time limit
 
+        # Set answerState to False when the dialog is closed
+        dialog.finished.connect(self.setAnswerStateOnClose)
+
         # Show the dialog
         dialog.show()
+
+    def setAnswerStateOnClose(self):
+        self.answerState = False
 
     def submit_answer(self, answer, dialog):
         # Logic to handle the submitted answer
@@ -779,7 +790,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             # add two point to the drawer and one to the finder
             self.score[self.answer_turn] += 1
             self.score[self.draw_turn] += 2
-            dialog.accept()
+            dialog.accept() # close window to avoid cheating by answering right again
+            self.update_points() # update points
         else:
             QMessageBox.warning(self, "Incorrect", "Try again!")
 
@@ -862,13 +874,15 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         dialog.show()
 
     def answer(self):
-        # do not permit drawing after time ended
+        # setting answerState to true as we answer
+        self.answerState = True
+
+        # do not permit drawing when answering
         self.allowDrawing = False
 
         # start timer and show answer window
         self.start_timer(self.answer_time_limit)
         self.answer_window()
-        QTimer.singleShot(self.answer_time_limit * 1000, self.update_points)
 
     def turn(self):
         # clear the canvas
@@ -906,25 +920,36 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             self.game = False
             self.stop = True
         else:
-            self.update()
+            self.update_points()
             self.round()
 
     def round(self):
-        # turn 1
-        self.turn()
+        if self.draw_turn == 0:
+            # turn 1
+            self.turn()
 
-        # swap turn and update
-        self.swap_turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
-        self.update_points_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
-        
-        # turn 2 after changing player roles
-        self.turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+            # swap turn and update
+            self.swap_turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+            self.update_points_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+            
+            # turn 2 after changing player roles
+            self.turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
 
-        # show next_round window after end of round
-        self.end_round_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 2000)
+            # show next_round window after end of round
+            self.end_round_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 2000)
+
+        elif self.draw_turn == 1:
+            # turn 2
+            self.turn()
+            self.end_round_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+
+        else:
+            # Raise an error if the draw_turn number is invalid
+            raise ValueError(f"Invalid draw number: {self.draw_turn}. The draw number should be 0 or 1.")
+
 
     def initTimer(self):
-        # init timer to stop them when restarting turn
+        # init timer to stop them when skipping turn
         self.answer_timer = QTimer(self)
         self.answer_timer.timeout.connect(self.answer)
         self.answer_timer.setSingleShot(True)
@@ -945,6 +970,14 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.end_round_timer.timeout.connect(self.end_round)
         self.end_round_timer.setSingleShot(True)
 
+    def stopTimer(self):
+        # stop all the timer 
+        self.answer_timer.stop()
+        self.swap_turn_timer.stop()
+        self.update_points_timer.stop()
+        self.turn_timer.stop()
+        self.end_round_timer.stop()
+        self.timer.stop()
 
     def play(self):
 
@@ -998,7 +1031,31 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
                     self.rounds = self.round_id
                     self.stop = True
         else: 
-            QMessageBox.information(self, " Stop Game ", "There is no ongoing game. ")
+            QMessageBox.information(self, " Stop Game ", "There is no ongoing game, cannot stop it. ")
+
+    def next_turn(self):
+        if self.game and not self.answerState:
+            self.stopTimer()
+
+            # if draw turn is player 1 swap turn the update the points and restart round process
+            if self.draw_turn == 0:
+                self.swap_turn()
+                self.update_points()
+                self.round()
+
+            # if draw turn is player 2 go to end round which will swap player turns and add 1 to round 
+            elif self.draw_turn == 1:
+                self.end_round() 
+
+            # Raise an error if the draw_turn number is invalid
+            else:
+                 raise ValueError(f"Invalid draw number: {self.draw_turn}. The draw number should be 0 or 1.")
+
+        elif self.answerState:
+            QMessageBox.information(self, " Next Turn ", "Finish answering before skiping turn.")
+
+        else:
+            QMessageBox.information(self, " Next Turn ", "There is no ongoing game, cannot skip turn.")
 
 # this code will be executed if it is the main module but not if the module is imported
 #  https://stackoverflow.com/questions/419163/what-does-if-name-main-do
