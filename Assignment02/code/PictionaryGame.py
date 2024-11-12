@@ -68,8 +68,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         mainWidget = QWidget()
         mainWidget.setMaximumWidth(300)
 
-        # init game state
+        # init game state and stop state
         self.game = False
+        self.stop = False
 
         # draw settings (default)
         self.allowDrawing = True  # usefull for when the game started
@@ -880,8 +881,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # start timer and show word
         self.start_timer(self.draw_time_limit)
         self.show_word()
+
         # show answer window after end of drawing
-        QTimer.singleShot(self.draw_time_limit * 1000, self.answer)
+        self.answer_timer.start(self.draw_time_limit * 1000)
 
     def swap_turn(self):
         self.draw_turn, self.answer_turn = self.answer_turn, self.draw_turn
@@ -897,9 +899,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             self.reset_timer()
             self.reset_points()
             self.whoIsWinning()
-            # allowing drawing and removing the game state
+            # allowing drawing and resetting the game and stop state
             self.allowDrawing = True
             self.game = False
+            self.stop = True
         else:
             self.update()
             self.round()
@@ -909,22 +912,37 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.turn()
 
         # swap turn and update
-        QTimer.singleShot(
-            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.swap_turn
-        )
-        QTimer.singleShot(
-            (self.draw_time_limit + self.answer_time_limit + 1) * 1000,
-            self.update_points,
-        )
+        self.swap_turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+        self.update_points_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
+        
         # turn 2 after changing player roles
-        QTimer.singleShot(
-            (self.draw_time_limit + self.answer_time_limit + 1) * 1000, self.turn
-        )
+        self.turn_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 1000)
 
         # show next_round window after end of round
-        QTimer.singleShot(
-            (self.draw_time_limit + self.answer_time_limit + 1) * 2000, self.end_round
-        )
+        self.end_round_timer.start((self.draw_time_limit + self.answer_time_limit + 1) * 2000)
+
+    def initTimer(self):
+        # init timer to stop them when restarting turn
+        self.answer_timer = QTimer(self)
+        self.answer_timer.timeout.connect(self.answer)
+        self.answer_timer.setSingleShot(True)
+
+        self.swap_turn_timer = QTimer(self)
+        self.swap_turn_timer.timeout.connect(self.swap_turn)
+        self.swap_turn_timer.setSingleShot(True)
+
+        self.update_points_timer = QTimer(self)
+        self.update_points_timer.timeout.connect(self.update_points)
+        self.update_points_timer.setSingleShot(True)
+
+        self.turn_timer = QTimer(self)
+        self.turn_timer.timeout.connect(self.turn)
+        self.turn_timer.setSingleShot(True)
+
+        self.end_round_timer = QTimer(self)
+        self.end_round_timer.timeout.connect(self.end_round)
+        self.end_round_timer.setSingleShot(True)
+
 
     def play(self):
 
@@ -954,6 +972,8 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
                 self.answer_turn = 1
                 self.update_points()
 
+                # init the timer and start first round
+                self.initTimer()
                 self.round()
 
             else:
@@ -962,17 +982,19 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
     def stop_action(self):
         # Show confirmation dialog
         if self.game:
-            reply = QMessageBox.question(
-                self,
-                "Confirm Stop",
-                "Are you sure you want to stop the game at the end of this round?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
+            if not self.stop:
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Stop",
+                    "Are you sure you want to stop the game at the end of this round?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
 
-            # If the user clicks "Yes", set rounds to current round to stop the game at the end of the round
-            if reply == QMessageBox.StandardButton.Yes:
-                self.rounds = self.round_id
+                # If the user clicks "Yes", set rounds to current round to stop the game at the end of the round
+                if reply == QMessageBox.StandardButton.Yes:
+                    self.rounds = self.round_id
+                    self.stop = True
         else: 
             QMessageBox.information(self, " Stop Game ", "There is no ongoing game. ")
 
