@@ -100,43 +100,43 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.round_id = 0
 
         # set up menus
-        mainMenu = self.menuBar()  # create a menu bar
-        mainMenu.setNativeMenuBar(False)
-        fileMenu = mainMenu.addMenu(
+        self.mainMenu = self.menuBar()  # create a menu bar
+        self.mainMenu.setNativeMenuBar(False)
+        self.fileMenu = self.mainMenu.addMenu(
             " File "
         )  # add the file menu to the menu bar, the space is required as "File" is reserved in Mac
 
         # Add Eraser option
         eraserAction = QAction(QIcon("./icons/eraser.png"), "", self)
         eraserAction.setShortcut("Ctrl+E")
-        mainMenu.addAction(eraserAction)
+        self.mainMenu.addAction(eraserAction)
         eraserAction.triggered.connect(self.activateEraser)
         eraserAction.setShortcut("Ctrl+E")  # set shortcut for earser
 
         # Restore Brush option
         restoreBrushAction = QAction(QIcon("./icons/pen.png"), "", self)
         restoreBrushAction.setShortcut("Ctrl+R")
-        mainMenu.addAction(restoreBrushAction)
+        self.mainMenu.addAction(restoreBrushAction)
         restoreBrushAction.triggered.connect(self.restoreBrush)
         restoreBrushAction.setShortcut("Ctrl+R")  # set shortcut for  restor brush
 
-        brushSizeMenu = mainMenu.addMenu(
+        self.brushSizeMenu = self.mainMenu.addMenu(
             " Brush Size "
         )  # add the "Brush Size" menu to the menu bar
-        brushColorMenu = mainMenu.addMenu(
+        self.brushColorMenu = self.mainMenu.addMenu(
             " Brush Colour "
         )  # add the "Brush Colour" menu to the menu barself.capStyle, self.joinStyle
-        brushStyleMenu = mainMenu.addMenu(" Brush Style ")  # adding brush style menu
-        game_setting_menu = mainMenu.addAction(
-            " Game Setting "
+        self.brushStyleMenu = self.mainMenu.addMenu(" Brush Style ")  # adding brush style menu
+        game_setting_action = self.mainMenu.addAction(
+            " Game Settings "
         )  # add " Game Setting" menu to the menu bar
 
-        helpMenu = mainMenu.addMenu(
+        self.helpMenu = self.mainMenu.addMenu(
             " ? "
-        )  # adding help menu to menu bar adding space as it's the style of the bar
+        )  # adding help menu to menu bar adding space as it's the style of the bar setting ? as it's commonly used for searching for help or informations
 
         # Connecting the button game setting to the setting window
-        game_setting_menu.triggered.connect(self.update_game_setting)
+        game_setting_action.triggered.connect(self.update_game_setting)
 
         # save menu item
         saveAction = QAction(
@@ -145,7 +145,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         saveAction.setShortcut(
             "Ctrl+S"
         )  # connect this save action to a keyboard shortcut, documentation: https://doc.qt.io/qt-6/qaction.html#shortcut-prop
-        fileMenu.addAction(
+        self.fileMenu.addAction(
             saveAction
         )  # add the save action to the file menu, documentation: https://doc.qt.io/qt-6/qwidget.html#addAction
         saveAction.triggered.connect(
@@ -159,125 +159,123 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         clearAction.setShortcut(
             "Ctrl+C"
         )  # connect this clear action to a keyboard shortcut
-        fileMenu.addAction(clearAction)  # add this action to the file menu
+        self.fileMenu.addAction(clearAction)  # add this action to the file menu
         clearAction.triggered.connect(
             self.clear
         )  # when the menu option is selected or the shortcut is used the clear slot is triggered
-
-        # open
         openAction = QAction(
             QIcon("./icons/folder.png"), "Open", self
         )  # create an open action to open file
         openAction.setShortcut(
             "Ctrl+O"
         )  # connect the open action to a keyboard shortcut
-        fileMenu.addAction(openAction)  # add this action to the file menu
+        self.fileMenu.addAction(openAction)  # add this action to the file menu
         openAction.triggered.connect(
             self.open
         )  # when the menu option is selected or the shortcut is used the open slot is triggered
 
         # brush thickness
-        threepxAction = QAction(QIcon("./icons/threepx.png"), "3px", self)
+        threepxAction = QAction("3px", self)
         threepxAction.setShortcut("Ctrl+3")
-        brushSizeMenu.addAction(
+        self.brushSizeMenu.addAction(
             threepxAction
         )  # connect the action to the function below
         threepxAction.triggered.connect(self.threepx)
 
         fivepxAction = QAction("5px", self)
         fivepxAction.setShortcut("Ctrl+5")
-        brushSizeMenu.addAction(fivepxAction)
+        self.brushSizeMenu.addAction(fivepxAction)
         fivepxAction.triggered.connect(self.fivepx)
 
         sevenpxAction = QAction("7px", self)
         sevenpxAction.setShortcut("Ctrl+7")
-        brushSizeMenu.addAction(sevenpxAction)
+        self.brushSizeMenu.addAction(sevenpxAction)
         sevenpxAction.triggered.connect(self.sevenpx)
 
         ninepxAction = QAction("9px", self)
         ninepxAction.setShortcut("Ctrl+9")
-        brushSizeMenu.addAction(ninepxAction)
+        self.brushSizeMenu.addAction(ninepxAction)
         ninepxAction.triggered.connect(self.ninepx)
 
         # brush colors
         blackAction = QAction(QIcon("./icons/black.png"), "Black", self)
         blackAction.setShortcut("Ctrl+B")
-        brushColorMenu.addAction(blackAction)
+        self.brushColorMenu.addAction(blackAction)
         blackAction.triggered.connect(self.black)
 
         redAction = QAction(QIcon("./icons/red.png"), "Red", self)
         redAction.setShortcut("Ctrl+R")
-        brushColorMenu.addAction(redAction)
+        self.brushColorMenu.addAction(redAction)
         redAction.triggered.connect(self.red)
 
         greenAction = QAction(QIcon("./icons/green.png"), "Green", self)
         greenAction.setShortcut("Ctrl+G")
-        brushColorMenu.addAction(greenAction)
+        self.brushColorMenu.addAction(greenAction)
         greenAction.triggered.connect(self.green)
 
         yellowAction = QAction(QIcon("./icons/yellow.png"), "Yellow", self)
         yellowAction.setShortcut("Ctrl+Y")
-        brushColorMenu.addAction(yellowAction)
+        self.brushColorMenu.addAction(yellowAction)
         yellowAction.triggered.connect(self.yellow)
 
         # adding blue as it's a primmary color
         blueAction = QAction(QIcon("./icons/blue.png"), "Blue", self)
         blueAction.setShortcut("Ctrl+U")
-        brushColorMenu.addAction(blueAction)
+        self.brushColorMenu.addAction(blueAction)
         blueAction.triggered.connect(self.blue)
 
         # Action for the color picker to the Brush Colour menu
         colorPickerAction = QAction(
-            QIcon("./icons/color-wheel.png"), "Choose Color", self
+            QIcon("./icons/color-wheel.png"), "Choose Colour", self
         )
         colorPickerAction.setShortcut("Ctrl+P")
-        brushColorMenu.addAction(colorPickerAction)
+        self.brushColorMenu.addAction(colorPickerAction)
         colorPickerAction.triggered.connect(self.openColorPicker)
 
-        lineStyleMenu = brushStyleMenu.addMenu(
+        self.lineStyleMenu = self.brushStyleMenu.addMenu(
             " Line Style "
         )  # add the Brush Style menu
-        capStyleMenu = brushStyleMenu.addMenu(" Cap Style ")  # add the Cap Style menu
-        joinStyleMenu = brushStyleMenu.addMenu(
+        self.capStyleMenu = self.brushStyleMenu.addMenu(" Cap Style ")  # add the Cap Style menu
+        self.joinStyleMenu = self.brushStyleMenu.addMenu(
             " Join Style "
         )  # add the Join Style menu
 
         # Brush style
         solidAction = QAction("Solid", self)
         solidAction.triggered.connect(self.setSolidStyle)
-        lineStyleMenu.addAction(solidAction)
+        self.lineStyleMenu.addAction(solidAction)
 
         dashedAction = QAction("Dashed", self)
         dashedAction.triggered.connect(self.setDashedStyle)
-        lineStyleMenu.addAction(dashedAction)
+        self.lineStyleMenu.addAction(dashedAction)
 
         dottedAction = QAction("Dotted", self)
         dottedAction.triggered.connect(self.setDottedStyle)
-        lineStyleMenu.addAction(dottedAction)
+        self.lineStyleMenu.addAction(dottedAction)
 
         roundCapAction = QAction("Round Cap", self)
         roundCapAction.triggered.connect(self.setRoundCap)
-        capStyleMenu.addAction(roundCapAction)
+        self.capStyleMenu.addAction(roundCapAction)
 
         squareCapAction = QAction("Square Cap", self)
         squareCapAction.triggered.connect(self.setSquareCap)
-        capStyleMenu.addAction(squareCapAction)
+        self.capStyleMenu.addAction(squareCapAction)
 
         flatCapAction = QAction("Flat Cap", self)
         flatCapAction.triggered.connect(self.setFlatCap)
-        capStyleMenu.addAction(flatCapAction)
+        self.capStyleMenu.addAction(flatCapAction)
 
         roundJoinAction = QAction("Round Join", self)
         roundJoinAction.triggered.connect(self.setRoundJoin)
-        joinStyleMenu.addAction(roundJoinAction)
+        self.joinStyleMenu.addAction(roundJoinAction)
 
         bevelJoinAction = QAction("Bevel Join", self)
         bevelJoinAction.triggered.connect(self.setBevelJoin)
-        joinStyleMenu.addAction(bevelJoinAction)
+        self.joinStyleMenu.addAction(bevelJoinAction)
 
         miterJoinAction = QAction("Miter Join", self)
         miterJoinAction.triggered.connect(self.setMiterJoin)
-        joinStyleMenu.addAction(miterJoinAction)
+        self.joinStyleMenu.addAction(miterJoinAction)
 
         # Help menu
         # help menu buttons action
@@ -287,12 +285,13 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"<b>Instructions:</b><br>"
             f"- Use the left mouse button to draw on the canvas.<br>"
             f"- Use the eraser (Ctrl+E) to erase parts of your drawing.<br>"
-            f"- Select brush size, style, and color from the menu.<br>"
+            f"- Select brush size, style, and colour from the menu.<br>"
             f"- Save your drawing by selecting 'Save' (Ctrl+S).<br>"
             f"- Clear the canvas by selecting 'Clear' (Ctrl+C).<br>"
             f"- Open a new canvas by selecting 'Open' (Ctrl+O).<br>"
             f"- Customize game settings in the 'Game Setting' menu.<br>"
             f"- Start the game by clicing on the start button on bottom right.<br>"
+            f"- You can skip turn by clicking on the next turn button, attention you can not skip turn while answering.<br>"
             f"- You can stop the game by clicking on the stop button, the game will stop at the end of the round.<br><br>"
             f"<br><i>Enjoy playing!</i>"
         )
@@ -301,10 +300,11 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"<b>Welcome to Pictionary Game!</b><br><br>"
             f"<b>Shortcuts:</b><br>"
             f"- Change brush size: 3px (Ctrl+3), 5px (Ctrl+5), 7px (Ctrl+7), 9px (Ctrl+9).<br>"
-            f"- Change color: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y), Blue (Ctrl+U)"
+            f"- Change colour: Black (Ctrl+B), Red (Ctrl+R), Green (Ctrl+G), Yellow (Ctrl+Y), Blue (Ctrl+U)"
             f"or choose from the color palette (Ctrl+P).<br>"
             f"- Use the eraser tool: (Ctrl+E) <br>"
             f"- Restore brush after erasing: (Ctrl+R) <br>"
+            f"- Creating the leftside dock: (Ctrl+D) <br>"
             f"- Clear the canvas: (Ctrl+C) <br>"
             f"- Save the canvas: (Ctrl+S) <br><br>"
             f"<br><i>Enjoy playing!</i>"
@@ -319,7 +319,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             f"- Players take turns to draw randomly selected words.<br>"
             f"- Check the left sidebar for the current turn, player scores, and round number.<br>"
             f"- The timer displays the remaining time for each turn, when it stop you can't draw anymore or can't answer.<br>"
-            f"- Click on the ster button to start the game.<br>"
+            f"- A round is composed of 2 turn and a game is composed of many rounds.<br>"
+            f"- Click on the start button to start the game.<br>"
+            f"- Click on the next turn button to skip turn, attention you can not skip turn while answering.<br>"
             f"- Click on stop to stop at the end of the actual round.<br><br>"
             f"<br><i>Enjoy playing!</i>"
         )
@@ -327,20 +329,29 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # add about button to help menu
         helpaboutButton = QAction(" About ", self)
         helpaboutButton.triggered.connect(lambda: self.helpMessageBox(" About ", helpMessageAbout))
-        helpMenu.addAction(helpaboutButton)
+        self.helpMenu.addAction(helpaboutButton)
 
         # add Shortcuts button to help menu
         helpShortcutButton = QAction(" Shortcuts ", self)
         helpShortcutButton.triggered.connect(lambda:self.helpMessageBox(" Shortcuts ", helpMessageShortcut))
-        helpMenu.addAction(helpShortcutButton)
+        self.helpMenu.addAction(helpShortcutButton)
 
         # add game info button to help menu
         helpGameButton = QAction(" Game Info ", self)
         helpGameButton.triggered.connect(lambda:self.helpMessageBox(" Game Info ", helpMessageGame))
-        helpMenu.addAction(helpGameButton)
-        
+        self.helpMenu.addAction(helpGameButton)
 
-        # Side Dock, putting the dock and playInfo into class property to modify the label of playerInfo and modify the dockInfo size when resizing the image
+        self.create_dock()
+        # Self.dockInfo.setAutoFillBackground(True) # drawing not updated on real time need to open another children window and close it
+
+        # Initialize popDock action with shortcut to recreate dock when it's deleted
+        popDock = QAction("Create Dock", self)
+        popDock.triggered.connect(self.create_dock)
+        popDock.setShortcut("Ctrl+D")  # Set a shortcut for creating the dock
+
+    # Create_dock to add the dock to the main window
+    def create_dock(self):
+        # Side Dock, putting the dock and playInfo into class property to modify the label of playerInfo and modify the dockInfo setMaximumSize when resizing the image
         self.dockInfo = QDockWidget()
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockInfo)
 
@@ -351,7 +362,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.playerInfo.setMaximumSize(150, self.height())
         # add controls to custom widget
         # init label
-        self.turn_label = QLabel("Current Turn: -")
+        self.turn_label = QLabel("Player - Turn")
         self.round_label = QLabel("Current Round: -")
         self.player1_label = QLabel("Player 1: -")
         self.player2_label = QLabel("Player 2: -")
@@ -389,25 +400,32 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         palette = self.playerInfo.palette()
         palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.gray)
         palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.black)
+        palette.setColor(QPalette.ColorRole.Highlight, Qt.GlobalColor.transparent) # to see the icon on main menu
+        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
         palette.setColor(QPalette.ColorRole.Button, Qt.GlobalColor.gray)
         palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.black)
 
         # Setting the palette to the element were there is text
         self.playerInfo.setPalette(palette)
         self.dockInfo.setPalette(palette)
-        mainMenu.setPalette(palette) 
+        
+        # Apply the palette to all menus
+        for menu in [self.mainMenu, self.helpMenu, self.fileMenu, self.brushStyleMenu, self.capStyleMenu, self.joinStyleMenu, self.lineStyleMenu, self.brushColorMenu]:
+            menu.setPalette(palette)
+            # Additional styling with stylesheets to ensure color consistency across menus
+            menu.setStyleSheet("""
+                QMenu {
+                    background-color: gray;
+                    color: black;
+                }
+                QMenu::item:selected {
+                    background-color: lightgray;
+                    color: black;
+                }
+            """)
 
         # Set widget for dock
         self.dockInfo.setWidget(self.playerInfo)
-        # Self.dockInfo.setAutoFillBackground(True) # drawing not updated on real time need to open another children window and close it
-
-        # Initialize the current word list
-        self.getList(self.difficulty)
-        self.currentWord = self.getWord()
-
-        # Init timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_timer)
 
     # Event handlers
     def mousePressEvent(
@@ -436,7 +454,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             if self.isEraserActive:
                 # Eraser mode
                 painter.setPen(
-                    QPen(Qt.GlobalColor.white, self.brushSize, Qt.PenStyle.SolidLine)
+                    QPen(Qt.GlobalColor.white, self.brushSize, Qt.PenStyle.SolidLine) # eraser is white because the font when playing the game is white
                 )
             else:
                 # Normal drawing mode
@@ -628,6 +646,25 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.update()  # call the update method of the widget which calls the paintEvent of this class
 
     def update_game_setting(self):
+        # Check if the game is active
+        if self.game:
+            # Format current settings into a readable string
+            current_settings = (
+                f"Current Settings:\n"
+                f"Draw Time Limit: {self.draw_time_limit} seconds\n"
+                f"Answer Time Limit: {self.answer_time_limit} seconds\n"
+                f"Number of Rounds: {self.rounds}\n"
+                f"Difficulty Level: {self.difficulty.capitalize()}"
+            )
+            
+            # Show message box with current settings, informing user settings can't be changed
+            QMessageBox.warning(
+                self, 
+                "Settings Locked", 
+                f"Game settings cannot be changed while the game is active.\n\n{current_settings}"
+            )
+            return  # Exit the function without opening the settings dialog
+        
         dialog = QDialog(self)
         dialog.setWindowTitle("Game Settings")
 
@@ -802,7 +839,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
             QMessageBox.warning(self, "Incorrect", "Try again!")
 
     def update_points(self):
-        self.turn_label.setText(f"Current Turn: {self.draw_turn + 1}")
+        self.turn_label.setText(f"Player {self.draw_turn + 1} Turn")
         self.round_label.setText(f"Current Round: {self.round_id}")
         self.player1_label.setText(f"Player 1: {self.score[0]}")
         self.player2_label.setText(f"Player 2: {self.score[1]}")
@@ -831,7 +868,7 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         self.timer_label.setText(f"Time Left: {minutes:02}:{seconds:02}")
 
     def reset_points(self):
-        self.turn_label.setText("Current Turn: -")
+        self.turn_label.setText("Player - Turn")
         self.round_label.setText("Current Round: -")
         self.player1_label.setText("Player 1: -")
         self.player2_label.setText("Player 2: -")
@@ -894,6 +931,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
         # clear the canvas
         self.clear()
 
+        # set the brush to black on each turn's start so every player restart with the same pen colour
+        self.black()
+
         # Get a new word for the turn
         self.currentWord = self.getWord()
 
@@ -955,7 +995,10 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
 
 
     def initTimer(self):
-        # init timer to stop them when skipping turn
+        # init timer to stop them when skipping turn, so we need to init one timer for one function we wil use that need timing
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_timer) 
+         
         self.answer_timer = QTimer(self)
         self.answer_timer.timeout.connect(self.answer)
         self.answer_timer.setSingleShot(True)
@@ -1006,6 +1049,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
                 # setting the drawing state to false
                 self.allowDrawing = False
 
+                # init the wordlist by reading the list of actual difficulty
+                self.getList(self.difficulty)
+
                 # Reset scores and start a new game
                 self.score = [0, 0]
                 self.round_id = 1
@@ -1036,6 +1082,9 @@ class PictionaryGame(QMainWindow):  # documentation https://doc.qt.io/qt-6/qwidg
                 if reply == QMessageBox.StandardButton.Yes:
                     self.rounds = self.round_id
                     self.stop = True
+            else:
+                QMessageBox.information(self, " Stop Game ", "You already stoped the Game, cannot stop it more. ")
+
         else: 
             QMessageBox.information(self, " Stop Game ", "There is no ongoing game, cannot stop it. ")
 
